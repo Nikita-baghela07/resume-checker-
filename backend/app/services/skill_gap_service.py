@@ -9,13 +9,13 @@ import re
 # Master skill list (curated top skills)
 MASTER_SKILLS = {
     "languages": ["Python", "Java", "JavaScript", "TypeScript", "C++", "C#", "Go", "Rust", "Ruby", "PHP", "Swift", "Kotlin", "R", "MATLAB"],
-    "databases_query": ["SQL"],
+    "query_languages": ["SQL"],
     "frameworks": ["React", "Vue", "Angular", "FastAPI", "Django", "Flask", "Spring Boot", "ASP.NET", "Express", "Next.js", "NestJS"],
-    "cloud": ["AWS", "Google Cloud", "Azure", "Docker", "Kubernetes", "Terraform", "CloudFormation", "Lambda", "EC2", "S3"],
+    "cloud": ["AWS", "Google Cloud", "GCP", "Azure", "Docker", "Kubernetes", "Terraform", "CloudFormation", "Lambda", "EC2", "S3"],
     "data": ["MongoDB", "PostgreSQL", "MySQL", "Redis", "Cassandra", "Elasticsearch", "Firebase", "DynamoDB"],
     "ml": ["TensorFlow", "PyTorch", "scikit-learn", "Keras", "NLP", "Computer Vision", "Deep Learning", "Machine Learning"],
     "tools": ["Git", "GitHub", "GitLab", "CI/CD", "Jenkins", "Linux", "Nginx", "Apache", "Jira"],
-    "other": ["REST API", "GraphQL", "Microservices", "Agile", "Scrum", "DevOps", "Testing", "GCP"]
+    "other": ["REST API", "GraphQL", "Microservices", "Agile", "Scrum", "DevOps", "Testing"]
 }
 
 def flatten_skills(skills_dict: dict) -> List[str]:

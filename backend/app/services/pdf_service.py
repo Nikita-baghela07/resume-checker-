@@ -13,6 +13,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+_SECTION_KEYWORDS = {
+    "experience", "work experience", "professional experience",
+    "education", "degrees", "certifications",
+    "skills", "technical skills", "core competencies",
+    "summary", "objective", "professional summary",
+    "projects", "publications", "awards", "languages",
+    "interests", "volunteer", "references",
+}
+
 def generate_pdf(resume_text: str) -> bytes:
     """
     Generate ATS-safe PDF from resume text.
@@ -69,15 +78,6 @@ def generate_pdf(resume_text: str) -> bytes:
         
         # Parse resume text into sections and add to story
         lines = resume_text.split('\n')
-
-        _SECTION_KEYWORDS = {
-            "experience", "work experience", "professional experience",
-            "education", "degrees", "certifications",
-            "skills", "technical skills", "core competencies",
-            "summary", "objective", "professional summary",
-            "projects", "publications", "awards", "languages",
-            "interests", "volunteer", "references",
-        }
 
         for line in lines:
             stripped = line.strip()
