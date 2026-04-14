@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import anthropic
 import json
 import logging
+from fastapi import HTTPException
 from app.models.request_models import DiffItem
 from typing import Tuple, List
 from app.core.config import settings
@@ -50,7 +51,10 @@ async def rewrite_resume(resume_text: str, job_description: str, model=None) -> 
     try:
         if not settings.ANTHROPIC_API_KEY:
             logger.error("ANTHROPIC_API_KEY not set")
-            return resume_text, []
+            raise HTTPException(
+                status_code=503,
+                detail="ANTHROPIC_API_KEY is not configured. Please set it in your .env file."
+            )
         
         client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         

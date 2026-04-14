@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileUp, Copy, Check } from 'lucide-react';
+import { FileUp, Copy, Check, ClipboardPaste } from 'lucide-react';
 
-export const Upload = ({ onUpload, onJobDescriptionChange }) => {
+export const Upload = ({ onUpload, onJobDescriptionChange, onResumeTextPaste }) => {
   const [dragActive, setDragActive] = useState(false);
   const [resumeFile, setResumeFile] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
   const [copiedID, setCopiedID] = useState(null);
   const [error, setError] = useState('');
+  const [inputMode, setInputMode] = useState('pdf'); // 'pdf' | 'paste'
+  const [pastedResume, setPastedResume] = useState('');
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -60,58 +62,105 @@ export const Upload = ({ onUpload, onJobDescriptionChange }) => {
     onJobDescriptionChange(text);
   };
 
+  const handlePastedResumeChange = (e) => {
+    const text = e.target.value;
+    setPastedResume(text);
+    onResumeTextPaste(text);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-8"
     >
-      {/* Resume Upload */}
+      {/* Resume Input */}
       <div>
         <label className="block text-lg font-semibold text-slate-800 mb-4">
-          📄 Upload Your Resume (PDF)
+          📄 Your Resume
         </label>
 
-        <motion.div
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          animate={{
-            borderColor: dragActive ? '#3B82F6' : '#e2e8f0',
-            backgroundColor: dragActive ? '#f0f4ff' : 'white',
-          }}
-          className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all"
-        >
-          <FileUp size={48} className="mx-auto mb-4 text-blue-500" />
-          <p className="text-lg font-medium text-slate-700 mb-2">
-            Drag and drop your resume here
-          </p>
-          <p className="text-sm text-slate-500 mb-4">or click to select a file</p>
-
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handleFileInput}
-            className="hidden"
-            id="pdf-upload"
-          />
-          <label
-            htmlFor="pdf-upload"
-            className="inline-block px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+        {/* Mode toggle */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => { setInputMode('pdf'); setError(''); }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              inputMode === 'pdf'
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
           >
-            Select PDF
-          </label>
+            📁 Upload PDF
+          </button>
+          <button
+            onClick={() => { setInputMode('paste'); setError(''); }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              inputMode === 'paste'
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <span className="flex items-center gap-1"><ClipboardPaste size={14} /> Paste Text</span>
+          </button>
+        </div>
 
-          {resumeFile && (
-            <p className="text-sm text-green-600 mt-4 flex items-center justify-center gap-2">
-              ✓ {resumeFile.name}
+        {inputMode === 'pdf' ? (
+          <>
+            <motion.div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              animate={{
+                borderColor: dragActive ? '#3B82F6' : '#e2e8f0',
+                backgroundColor: dragActive ? '#f0f4ff' : 'white',
+              }}
+              className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all"
+            >
+              <FileUp size={48} className="mx-auto mb-4 text-blue-500" />
+              <p className="text-lg font-medium text-slate-700 mb-2">
+                Drag and drop your resume here
+              </p>
+              <p className="text-sm text-slate-500 mb-4">or click to select a file</p>
+
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleFileInput}
+                className="hidden"
+                id="pdf-upload"
+              />
+              <label
+                htmlFor="pdf-upload"
+                className="inline-block px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+              >
+                Select PDF
+              </label>
+
+              {resumeFile && (
+                <p className="text-sm text-green-600 mt-4 flex items-center justify-center gap-2">
+                  ✓ {resumeFile.name}
+                </p>
+              )}
+            </motion.div>
+
+            {error && (
+              <p className="text-sm text-red-600 mt-2">{error}</p>
+            )}
+          </>
+        ) : (
+          <div>
+            <textarea
+              value={pastedResume}
+              onChange={handlePastedResumeChange}
+              placeholder="Paste your resume text here... (use this if your PDF is image-based or won't upload)"
+              rows={10}
+              className="w-full p-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+            />
+            <p className="text-sm text-slate-500 mt-1">
+              💡 Tip: Copy all text from your resume and paste it above
             </p>
-          )}
-        </motion.div>
-
-        {error && (
-          <p className="text-sm text-red-600 mt-2">{error}</p>
+          </div>
         )}
       </div>
 

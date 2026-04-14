@@ -1,0 +1,36 @@
+Jane Smith
+jane.smith@email.com | LinkedIn.com/in/janesmith | GitHub.com/janesmith
+
+PROFESSIONAL SUMMARY
+Senior Backend Engineer with 6+ years designing and scaling distributed microservices on AWS. Proven track record delivering high-availability REST and GraphQL APIs serving millions of requests daily. Deep expertise in Python, FastAPI, and Kubernetes with a passion for mentoring engineering teams.
+
+EXPERIENCE
+
+Senior Backend Engineer — CloudScale Inc. (Mar 2021 – Present)
+- Architected a Python/FastAPI microservices platform handling 15M+ daily requests, reducing P99 latency by 40%
+- Designed and deployed event-driven pipelines using AWS Lambda, SQS, and S3, cutting infrastructure costs by 30%
+- Led migration from monolith to Kubernetes-managed microservices, improving deployment frequency from weekly to 10+ per day
+- Established CI/CD pipelines in GitLab CI with automated testing gates, reducing production defects by 55%
+- Mentored 4 junior engineers and conducted weekly code reviews to enforce coding standards
+
+Backend Engineer — DataFlow Systems (Jun 2018 – Feb 2021)
+- Built and maintained REST APIs in Python/Django serving 500K active users
+- Optimized PostgreSQL query performance, reducing average query time from 800ms to 90ms via indexing and query refactoring
+- Integrated AWS RDS, ElastiCache (Redis), and DynamoDB for multi-tier data storage
+- Authored GraphQL schema and resolvers powering the company's partner integration layer
+- Implemented automated unit and integration tests (pytest), achieving 85% code coverage
+
+Junior Developer — WebStart Agency (Jan 2017 – May 2018)
+- Developed customer-facing REST APIs using Flask and MySQL
+- Built Docker-based local development environments, onboarding time from 2 days to 2 hours
+- Participated in Agile sprints, delivering features on time for 3 consecutive product launches
+
+EDUCATION
+B.S. Computer Science — State University (2016)
+
+SKILLS
+Python, FastAPI, Django, Flask, JavaScript, TypeScript, GraphQL, REST API
+AWS (EC2, RDS, S3, Lambda, SQS, ECS), Docker, Kubernetes, Terraform
+PostgreSQL, MySQL, MongoDB, Redis, DynamoDB, Elasticsearch
+CI/CD (GitLab CI, Jenkins, GitHub Actions), Git, Linux, Nginx
+Microservices, Agile/Scrum, TDD, pytest, code review

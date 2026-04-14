@@ -31,6 +31,10 @@ function App() {
     }
   };
 
+  const handleResumeTextPaste = (text) => {
+    setResumeText(text);
+  };
+
   const handleJobDescriptionChange = (text) => {
     setJobDescription(text);
   };
@@ -54,7 +58,17 @@ function App() {
       setResults(response);
       setStep(STEPS.RESULTS);
     } catch (err) {
-      setError('Failed to optimize resume. Please try again.');
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+      if (status === 503) {
+        setError(`AI service unavailable: ${detail || 'ANTHROPIC_API_KEY not configured.'}`);
+      } else if (status === 504 || err?.code === 'ECONNABORTED') {
+        setError('AI service timed out — please try again.');
+      } else if (detail) {
+        setError(`Error: ${detail}`);
+      } else {
+        setError('Failed to optimize resume. Please try again.');
+      }
       setStep(STEPS.UPLOAD);
       console.error(err);
     }
@@ -102,6 +116,7 @@ function App() {
             <Upload
               onUpload={handleResumeUpload}
               onJobDescriptionChange={handleJobDescriptionChange}
+              onResumeTextPaste={handleResumeTextPaste}
             />
 
             {error && (

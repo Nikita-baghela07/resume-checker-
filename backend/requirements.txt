@@ -9,5 +9,4 @@ pdfplumber
 reportlab
 sentence-transformers
 scikit-learn
-spacy
 numpy

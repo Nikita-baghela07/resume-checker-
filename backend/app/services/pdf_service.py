@@ -69,14 +69,22 @@ def generate_pdf(resume_text: str) -> bytes:
         
         # Parse resume text into sections and add to story
         lines = resume_text.split('\n')
-        
+
+        _SECTION_KEYWORDS = {
+            "experience", "work experience", "professional experience",
+            "education", "degrees", "certifications",
+            "skills", "technical skills", "core competencies",
+            "summary", "objective", "professional summary",
+            "projects", "publications", "awards", "languages",
+            "interests", "volunteer", "references",
+        }
+
         for line in lines:
             stripped = line.strip()
-            
+
             if not stripped:
                 story.append(Spacer(1, 0.1*inch))
-            elif stripped.isupper() and len(stripped) < 50:
-                # Assume uppercase lines are section headers
+            elif stripped.lower() in _SECTION_KEYWORDS:
                 story.append(Paragraph(stripped, heading_style))
             else:
                 # Regular content
