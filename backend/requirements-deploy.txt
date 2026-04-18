@@ -13,3 +13,6 @@ bcrypt==3.2.2
 pyjwt==2.9.0
 httpx==0.27.0
 gunicorn==21.2.0
+python-docx==0.8.11
+docx2pdf==0.1.8
+reportlab==4.0.9
