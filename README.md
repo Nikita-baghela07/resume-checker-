@@ -225,7 +225,7 @@ heroku create your-app-name
 git push heroku main
 ```
 MODEL_NAME=claude-sonnet-4-20250514
-SBERT_MODEL=all-MiniLM-L6-v2
+EMBEDDING_MODEL=bert-base-uncased
 ALLOWED_ORIGINS=http://localhost:5173
 MAX_TOKENS=2000
 ```

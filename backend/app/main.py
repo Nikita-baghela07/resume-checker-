@@ -1,8 +1,10 @@
 import logging
 import sys
 import os
+import re
 from contextlib import asynccontextmanager
 
+import numpy as np
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -33,26 +35,34 @@ else:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load SBERT model once at startup — not per request."""
-    logger.info("Loading SBERT model...")
+    """Load BERT embedding model once at startup — not per request."""
+    logger.info("Loading BERT embedding model...")
     try:
         # Create database tables
         logger.info("Initializing database...")
         Base.metadata.create_all(bind=engine)
         logger.info("✅ Database tables initialized")
 
-        from sentence_transformers import SentenceTransformer
-        app.state.sbert_model = SentenceTransformer(settings.SBERT_MODEL)
-        logger.info(f"✅ SBERT model '{settings.SBERT_MODEL}' loaded successfully")
+        from ai_engine.embedding.bert_embedder import BertEmbedder
+        app.state.sbert_model = BertEmbedder(settings.EMBEDDING_MODEL)
+        logger.info(
+            f"✅ BERT model '{settings.EMBEDDING_MODEL}' loaded successfully "
+            f"(hidden_size={app.state.sbert_model.hidden_size})"
+        )
     except Exception as e:
-        logger.warning(f"⚠️ Could not load SBERT model: {e}")
+        logger.warning(f"⚠️ Could not load BERT model: {e}")
         logger.warning("⚠️ Using dummy model for similarity scoring (output may be less accurate)")
-        # Create a dummy model object with encode method
+        # Create a dummy model object with encode and encode_words methods
         class DummyModel:
-            def encode(self, text):
-                import numpy as np
-                # Return random embeddings for testing
-                return np.random.rand(1, 384)
+            hidden_size = 768
+
+            def encode(self, texts):
+                n = len(texts) if isinstance(texts, list) else 1
+                return np.random.rand(n, self.hidden_size)
+
+            def encode_words(self, text):
+                words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
+                return {w: np.random.rand(self.hidden_size) for w in set(words)}
         app.state.sbert_model = DummyModel()
 
     yield  # App runs here

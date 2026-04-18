@@ -4,7 +4,7 @@ import logging
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from ai_engine.embedding.semantic_match import compute_similarity
+from ai_engine.embedding.semantic_match import compute_similarity, compute_semantic_keyword_overlap
 from ai_engine.extraction.section_detector import detect_sections
 from ai_engine.scoring.keyword_scorer import score_keyword_match
 from app.models.request_models import ScoreBreakdown
@@ -40,7 +40,7 @@ def compute_scores(resume_text: str, job_description: str, model) -> ScoreBreakd
     logger.debug(f"Skills section length: {len(skills_text)} chars")
     logger.debug(f"Experience section length: {len(experience_text)} chars")
 
-    # Semantic section-level similarities via SBERT
+    # Semantic section-level similarities via BERT sentence embeddings
     skills_score     = compute_similarity(skills_text,     job_description, model)
     experience_score = compute_similarity(experience_text, job_description, model)
 
@@ -48,24 +48,34 @@ def compute_scores(resume_text: str, job_description: str, model) -> ScoreBreakd
     kw_result = score_keyword_match(resume_text, job_description)
     keyword_score = kw_result["score"]
 
+    # Semantic word-level keyword overlap using BERT contextual embeddings.
+    # This catches near-synonyms (e.g. "developer" ≈ "engineer") that the
+    # regex/stem-based scorer misses.  The two keyword scores are averaged so
+    # that the final value benefits from both exact coverage and semantic depth.
+    semantic_kw_score = compute_semantic_keyword_overlap(
+        resume_text, job_description, model
+    )
+    blended_keyword_score = round((keyword_score + semantic_kw_score) / 2, 1)
+
     # Weighted overall score
     overall = round(
-        (skills_score     * _W_SKILLS) +
-        (experience_score * _W_EXP)    +
-        (keyword_score    * _W_KEYWORD),
+        (skills_score          * _W_SKILLS) +
+        (experience_score      * _W_EXP)    +
+        (blended_keyword_score * _W_KEYWORD),
         1
     )
 
     logger.info(
         f"Scores → skills={skills_score}% exp={experience_score}% "
-        f"kw={keyword_score}% overall={overall}%"
+        f"kw_exact={keyword_score}% kw_semantic={semantic_kw_score}% "
+        f"kw_blended={blended_keyword_score}% overall={overall}%"
     )
 
     return ScoreBreakdown(
         overall=overall,
         skills_match=skills_score,
         experience_match=experience_score,
-        keyword_coverage=keyword_score,
+        keyword_coverage=blended_keyword_score,
         formatting="ATS Safe",
         matched_keywords=kw_result["matched_keywords"],
         missing_keywords=kw_result["missing_keywords"],
