@@ -51,7 +51,7 @@ pip install -r backend/requirements-deploy.txt
 
 **START COMMAND:**
 ```
-cd backend && gunicorn -w 2 -b 0.0.0.0:8000 --timeout 120 --access-logfile - run:app
+cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
 ```
 
 **REGION:** `Ohio` (or closest to you)

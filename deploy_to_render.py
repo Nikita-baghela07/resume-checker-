@@ -35,7 +35,7 @@ DEPLOYMENT_CONFIG = {
     "branch": BRANCH,
     "runtime": RUNTIME,
     "buildCommand": "pip install -r backend/requirements-deploy.txt",
-    "startCommand": "cd backend && gunicorn -w 2 -b 0.0.0.0:8000 --timeout 120 --access-logfile - app.main:app",
+    "startCommand": "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2",
     "envVars": [
         {
             "key": "GROQ_API_KEY",
@@ -256,7 +256,7 @@ def manual_deployment_instructions():
     print("   BUILD COMMAND:")
     print("   pip install -r backend/requirements-deploy.txt")
     print("   START COMMAND:")
-    print("   cd backend && gunicorn -w 2 -b 0.0.0.0:8000 --timeout 120 --access-logfile - app.main:app")
+    print("   cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2")
     print("   REGION: Ohio")
     print("   PLAN: Free\n")
     
