@@ -3,7 +3,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import re
 
-# Similarity threshold above which two words are considered a semantic match
+# Similarity threshold above which two words are considered a semantic match.
+# 0.75 was chosen empirically: below this value BERT often matches unrelated
+# domain words (e.g. "engineer" ≈ "company"); above 0.9 near-synonyms such as
+# "developer" / "programmer" are incorrectly rejected.
 _WORD_SIM_THRESHOLD = 0.75
 
 _STOP_WORDS = {

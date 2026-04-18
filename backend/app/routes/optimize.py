@@ -20,24 +20,43 @@ async def optimize_resume(
     Core pipeline endpoint.
 
     Steps:
+        0. Ensure professional structure (BERT-aware, provider-agnostic)
         1. Score original resume vs JD
         2. Detect skill gaps
-        3. Rewrite bullets with LLM (Groq)
+        3. Rewrite bullets with LLM provider (Groq / OpenAI / Anthropic)
         4. Re-score optimized resume
         5. Build diff
         6. Return full response
     """
-    model = request.app.state.sbert_model
-    
+    model        = request.app.state.sbert_model
+    llm_provider = getattr(request.app.state, "llm_provider", None)
+
     logger.info(f"📋 Starting optimization pipeline")
     logger.info(f"Resume length: {len(data.resume_text)} chars")
     logger.info(f"JD length: {len(data.job_description)} chars")
+    if llm_provider:
+        logger.info(f"LLM provider: {llm_provider.name}")
 
     try:
+        # ── Step 0: Ensure professional structure ─────────────────────────────
+        logger.info("0️⃣ Assessing resume structure…")
+        from ai_engine.extraction.section_detector import detect_sections
+        from ai_engine.rewriting.resume_structurer import ensure_professional_structure
+
+        detected_sections = detect_sections(data.resume_text)
+        working_resume, structure_reformed = ensure_professional_structure(
+            data.resume_text, llm_provider, detected_sections
+        ) if llm_provider else (data.resume_text, False)
+
+        if structure_reformed:
+            logger.info("✅ Resume structure was reformed by the LLM")
+        else:
+            logger.info("✅ Resume structure is already professional (no reform needed)")
+
         # ── Step 1: Score original ────────────────────────────────────────────
         logger.info("1️⃣ Computing initial ATS score...")
         initial_scores = scoring_service.compute_scores(
-            data.resume_text,
+            working_resume,
             data.job_description,
             model
         )
@@ -46,24 +65,25 @@ async def optimize_resume(
         # ── Step 2: Detect skill gaps ─────────────────────────────────────────
         logger.info("2️⃣ Detecting skill gaps...")
         skill_gaps = skill_gap_service.detect_gaps(
-            data.resume_text,
+            working_resume,
             data.job_description
         )
         logger.info(f"✅ Found {len(skill_gaps)} skill gaps")
 
         # ── Step 3: Rewrite resume with LLM ───────────────────────────────────
-        logger.info("3️⃣ Rewriting resume with AI (Groq LLM)...")
+        logger.info("3️⃣ Rewriting resume with AI LLM provider...")
         # Pass missing keywords for targeted optimization
         target_keywords = initial_scores.missing_keywords[:15] # Focus on top 15
-        
+
         optimized_text, diff_items = rewriter_service.rewrite_and_diff(
-            data.resume_text,
+            working_resume,
             data.job_description,
             model,
-            target_keywords=target_keywords
+            target_keywords=target_keywords,
+            provider=llm_provider,
         )
         logger.info(f"✅ Rewriting complete. {len(diff_items)} diffs generated")
-        logger.info(f"   Original length: {len(data.resume_text)} chars → Optimized: {len(optimized_text)} chars")
+        logger.info(f"   Original length: {len(working_resume)} chars → Optimized: {len(optimized_text)} chars")
         if diff_items:
             logger.info(f"   Sample diff: '{diff_items[0].original[:50]}' → '{diff_items[0].optimized[:50]}'")
 
@@ -87,7 +107,8 @@ async def optimize_resume(
             ),
             skill_gaps=skill_gaps,
             optimized_resume=optimized_text,
-            diff=diff_items
+            diff=diff_items,
+            structure_reformed=structure_reformed,
         )
 
         logger.info(

@@ -35,7 +35,7 @@ else:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load BERT embedding model once at startup — not per request."""
+    """Load BERT embedding model and LLM provider once at startup — not per request."""
     logger.info("Loading BERT embedding model...")
     try:
         # Create database tables
@@ -64,6 +64,17 @@ async def lifespan(app: FastAPI):
                 words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
                 return {w: np.random.rand(self.hidden_size) for w in set(words)}
         app.state.sbert_model = DummyModel()
+
+    # ── Initialise LLM provider ───────────────────────────────────────────────
+    logger.info(f"Initialising LLM provider '{settings.LLM_PROVIDER}'...")
+    try:
+        from ai_engine.llm.provider import get_provider
+        app.state.llm_provider = get_provider(settings.LLM_PROVIDER)
+        logger.info(f"✅ LLM provider '{app.state.llm_provider.name}' ready")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not initialise LLM provider: {e}")
+        logger.warning("⚠️ Resume rewriting will be unavailable until a valid provider is configured")
+        app.state.llm_provider = None
 
     yield  # App runs here
 

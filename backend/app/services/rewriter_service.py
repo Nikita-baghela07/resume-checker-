@@ -12,16 +12,26 @@ def rewrite_and_diff(
     resume_text: str,
     job_description: str,
     model,
-    target_keywords: list[str] = None
+    target_keywords: list[str] = None,
+    provider=None,
 ) -> tuple[str, list[DiffItem]]:
     """
-    Rewrite resume bullets using LLM and return:
+    Rewrite resume bullets using the LLM provider and return:
         - optimized full resume text
         - list of DiffItem (original vs optimized per bullet)
 
-    Also validates rewrites using semantic similarity (anti-hallucination).
+    Parameters
+    ----------
+    provider : LLMProvider | None
+        If None, a default Groq provider is constructed inside rewrite_resume.
     """
-    optimized_text, raw_diff = rewrite_resume(resume_text, job_description, model, target_keywords=target_keywords)
+    optimized_text, raw_diff = rewrite_resume(
+        resume_text,
+        job_description,
+        model,
+        target_keywords=target_keywords,
+        provider=provider,
+    )
 
     diff_items: list[DiffItem] = []
     for item in raw_diff:

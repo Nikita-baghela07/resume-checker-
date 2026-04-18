@@ -1,4 +1,4 @@
-"""Module for rewriting resume content using LLM (Groq API)."""
+"""Module for rewriting resume content using an abstract LLMProvider."""
 
 import os
 import re
@@ -10,8 +10,6 @@ from pathlib import Path
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from groq import Groq
-from app.core.config import settings
 from app.core.utils import extract_bullets
 
 logger = logging.getLogger(__name__)
@@ -137,36 +135,40 @@ def _replace_bullet_in_text(full_text: str, original_bullet: str, rewritten_bull
     return full_text, False
 
 
-def rewrite_resume(resume_text: str, job_description: str, model, target_keywords: list[str] = None) -> tuple[str, list[dict]]:
+def rewrite_resume(
+    resume_text: str,
+    job_description: str,
+    model,
+    target_keywords: list[str] = None,
+    provider=None,
+) -> tuple[str, list[dict]]:
     """
-    Rewrite resume bullets using Groq API to match job description.
+    Rewrite resume bullets using the given LLM provider to match the job description.
 
     Args:
-        resume_text: Original resume text
-        job_description: Target job description
-        model: SBERT model (unused but kept for interface compatibility)
-        target_keywords: Optional list of top keywords to prioritize
+        resume_text:      Original resume text.
+        job_description:  Target job description.
+        model:            BERT embedding model (unused but kept for interface compatibility).
+        target_keywords:  Optional list of top keywords to prioritise.
+        provider:         ``LLMProvider`` instance (Groq / OpenAI / Anthropic).
+                          If ``None``, a Groq provider is created from settings as
+                          a backwards-compatible fallback.
 
     Returns:
-        Tuple of (optimized_full_text, list_of_diffs)
+        Tuple of (optimised_full_text, list_of_diffs)
         where each diff is {"original": str, "rewritten": str}
     """
-    # Validate API key
-    api_key = settings.GROQ_API_KEY
-    if not api_key or api_key.strip() == "" or "gsk_" not in api_key:
-        logger.error(f"❌ GROQ_API_KEY is invalid or missing! Got: {repr(api_key[:20]) if api_key else 'EMPTY'}")
-        bullets = extract_bullets(resume_text)
-        return resume_text, [{"original": b, "rewritten": b} for b in bullets]
+    # Resolve provider — lazy-import to avoid circular deps
+    if provider is None:
+        try:
+            from ai_engine.llm.groq_provider import GroqProvider
+            provider = GroqProvider()
+        except Exception as e:
+            logger.error(f"❌ Could not initialise default Groq provider: {e}")
+            bullets = extract_bullets(resume_text)
+            return resume_text, [{"original": b, "rewritten": b} for b in bullets]
 
-    logger.info(f"✅ Using Groq API key: {api_key[:20]}...")
-
-    # Initialize Groq client
-    try:
-        client = Groq(api_key=api_key)
-    except Exception as e:
-        logger.error(f"❌ Failed to initialize Groq client: {e}")
-        bullets = extract_bullets(resume_text)
-        return resume_text, [{"original": b, "rewritten": b} for b in bullets]
+    logger.info(f"✅ Using LLM provider: {provider.name}")
 
     # Extract bullets from resume
     bullets = extract_bullets(resume_text)
@@ -181,7 +183,7 @@ def rewrite_resume(resume_text: str, job_description: str, model, target_keyword
 
     # Build user message — send bullets as a numbered list for clarity
     bullets_text = "\n".join(f"{i+1}. {b}" for i, b in enumerate(bullets[:20]))
-    
+
     keywords_str = ""
     if target_keywords:
         keywords_str = f"\nTARGET KEYWORDS TO INCORPORATE:\n{', '.join(target_keywords)}\n"
@@ -198,27 +200,22 @@ def rewrite_resume(resume_text: str, job_description: str, model, target_keyword
     )
 
     try:
-        logger.info(f"[GROQ] Calling Groq API with {settings.MODEL_NAME}...")
-        response = client.chat.completions.create(
-            model=settings.MODEL_NAME,
-            max_tokens=settings.MAX_TOKENS,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_message}
-            ],
-            temperature=0.4  # Lower temperature = more consistent, keyword-accurate output
+        logger.info(f"[LLM] Calling {provider.name} provider…")
+        response_text = provider.complete(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            max_tokens=2000,
+            temperature=0.4,
         )
-
-        response_text = response.choices[0].message.content
-        logger.info(f"[GROQ] Response length: {len(response_text)} chars")
-        logger.info(f"[GROQ] Response preview: {response_text[:300]}")
+        logger.info(f"[LLM] Response length: {len(response_text)} chars")
+        logger.info(f"[LLM] Response preview: {response_text[:300]}")
 
         # Parse JSON robustly
         rewritten = _extract_json_from_response(response_text)
-        logger.info(f"✅ Parsed {len(rewritten)} rewritten bullets from Groq")
+        logger.info(f"✅ Parsed {len(rewritten)} rewritten bullets")
 
     except Exception as e:
-        logger.error(f"[ERROR] Groq API / JSON parse failed: {e}", exc_info=True)
+        logger.error(f"[ERROR] LLM / JSON parse failed: {e}", exc_info=True)
         return resume_text, [{"original": b, "rewritten": b} for b in bullets]
 
     # Build diff list and reconstruct optimized text

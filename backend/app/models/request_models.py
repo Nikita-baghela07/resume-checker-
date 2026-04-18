@@ -59,6 +59,7 @@ class OptimizeResponse(BaseModel):
     skill_gaps: list[SkillGap]
     optimized_resume: str
     diff: list[DiffItem]
+    structure_reformed: bool = False  # True when the uploaded resume was restructured by the LLM
 
 
 class UploadResponse(BaseModel):
