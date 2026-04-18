@@ -1,6 +1,6 @@
-# OptiResume AI
+# ⚡ OptiResume AI
 
-Real-time ATS Simulator & Resume Optimizer with AI-powered resume enhancement.
+### **Transform your Resume for the Modern ATS Era.**
 
 ## 🚀 Features
 
@@ -32,7 +32,7 @@ Real-time ATS Simulator & Resume Optimizer with AI-powered resume enhancement.
 
 ---
 
-## 🔑 Prerequisites
+## 🌟 Key Features
 
 1. **Groq API Key** (FREE) - Get from https://console.groq.com
 2. **Node.js** v16+ (for frontend)
@@ -75,10 +75,13 @@ ALLOWED_ORIGINS=http://localhost:5173
 
 ### Frontend Setup
 
-```bash
-cd frontend
-npm install
-```
+| Component | Technology |
+|---|---|
+| **Backend** | FastAPI (Python 3.11) |
+| **Frontend** | React 18, Vite, Tailwind CSS |
+| **Database** | PostgreSQL |
+| **AI Models** | Groq (Llama-3.3-70b), SBERT (all-MiniLM-L6-v2) |
+| **Document** | python-docx, docx2pdf, ReportLab |
 
 ---
 
@@ -86,16 +89,18 @@ npm install
 
 ### Start Both Servers
 
-**Terminal 1 - Backend:**
+### 1. Backend Setup
 ```bash
 cd backend
+pip install -r requirements.txt
 python run.py
 # Backend runs on: http://localhost:8000
 ```
 
-**Terminal 2 - Frontend:**
+### 2. Frontend Setup
 ```bash
 cd frontend
+npm install
 npm run dev
 # Frontend runs on: http://localhost:5173
 ```
