@@ -33,8 +33,10 @@ else:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Use lightweight TF-IDF mode (no SBERT) to fit within Render 512MB RAM limit."""
-    logger.info("Initializing in lightweight mode (TF-IDF) to prevent Out of Memory errors.")
+    """Hybrid semantic mode (SBERT + TF-IDF) with graceful fallback."""
+    mode = "TF-IDF Only" if not settings.ENABLE_SBERT_MODEL else "SBERT + TF-IDF"
+    logger.info(f"Initializing Resume Optimizer [{mode}]...")
+    
     try:
         # Create database tables
         logger.info("Initializing database...")
@@ -44,6 +46,20 @@ async def lifespan(app: FastAPI):
         logger.error(f"⚠️ Database initialization failed: {e}")
 
     app.state.sbert_model = None
+    
+    # Only load SBERT if explicitly enabled (saves 200+ MB RAM)
+    if settings.ENABLE_SBERT_MODEL:
+        try:
+            from sentence_transformers import SentenceTransformer
+            logger.info(f"Loading SBERT model: {settings.SBERT_MODEL}...")
+            app.state.sbert_model = SentenceTransformer(settings.SBERT_MODEL)
+            logger.info("✅ SBERT model loaded successfully [HYBRID MODE]")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to load SBERT: {e}. Falling back to Pure TF-IDF.")
+            app.state.sbert_model = None
+    else:
+        logger.info("✅ SBERT model DISABLED [LIGHTWEIGHT MODE - 200MB saved]")
+
     yield  # App runs here
 
     logger.info("Shutting down OptiResume AI...")

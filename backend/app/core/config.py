@@ -14,6 +14,9 @@ class Settings:
     MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "2000"))
     ALLOWED_ORIGINS: list = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
     
+    # Deployment Mode: Set to 'false' in production to save 300+ MB RAM
+    ENABLE_SBERT_MODEL: bool = os.getenv("ENABLE_SBERT_MODEL", "true").lower() == "true"
+    
     # Database Settings
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./optiresume.db")
     

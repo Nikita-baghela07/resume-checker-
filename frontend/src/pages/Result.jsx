@@ -73,7 +73,7 @@ export default function Result({ results, onReset, resumeText }) {
                   <span className="text-[11px] font-semibold text-white">{user.full_name || user.email}</span>
                   <button 
                     onClick={logout}
-                    className="text-[9px] text-slate-500 hover:text-brand-400 uppercase tracking-widest font-bold transition-colors"
+                    className="p-1 -mr-1 text-[9px] text-slate-500 hover:text-brand-400 uppercase tracking-widest font-bold transition-colors"
                   >
                     Logout
                   </button>

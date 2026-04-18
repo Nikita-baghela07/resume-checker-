@@ -4,10 +4,11 @@ import logging
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from ai_engine.embedding.semantic_match import compute_similarity
+from ai_engine.embedding.semantic_match import compute_similarity, get_embedding
 from ai_engine.extraction.section_detector import detect_sections
 from ai_engine.scoring.keyword_scorer import score_keyword_match
 from app.models.request_models import ScoreBreakdown
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +41,17 @@ def compute_scores(resume_text: str, job_description: str, model) -> ScoreBreakd
     logger.debug(f"Skills section length: {len(skills_text)} chars")
     logger.debug(f"Experience section length: {len(experience_text)} chars")
 
+    # ── PERFORMANCE: Pre-compute JD embedding once per request ────────────────
+    jd_embedding = get_embedding(job_description, model)
+    
     # Semantic section-level similarities via SBERT
-    skills_score     = compute_similarity(skills_text,     job_description, model)
-    experience_score = compute_similarity(experience_text, job_description, model)
+    skills_score     = compute_similarity(skills_text,     job_description, model, emb_b=jd_embedding)
+    experience_score = compute_similarity(experience_text, job_description, model, emb_b=jd_embedding)
 
-    # Mathematical keyword scoring (transparent, reproducible)
-    kw_result = score_keyword_match(resume_text, job_description)
+    # Mathematical keyword scoring (Hybrid Semantic mode)
+    kw_result = score_keyword_match(resume_text, job_description, model)
     keyword_score = kw_result["score"]
+
 
     # Weighted overall score
     overall = round(

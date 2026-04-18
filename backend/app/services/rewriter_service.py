@@ -33,13 +33,15 @@ def rewrite_and_diff(
             original = clean_text(str(original_raw) if original_raw else "")
             optimized = clean_text(str(rewritten_raw) if rewritten_raw else original)
             
-            # Compare as strings
-            changed = (original.strip().lower() if original.strip() else "") != (optimized.strip().lower() if optimized.strip() else "")
+            # Use the 'changed' status from the rewriter if available (handles replacement failure)
+            changed = item.get("changed")
+            if changed is None:
+                changed = (original.strip().lower() if original.strip() else "") != (optimized.strip().lower() if optimized.strip() else "")
 
             diff_items.append(DiffItem(
                 original=original,
                 optimized=optimized,
-                changed=changed
+                changed=bool(changed)
             ))
         except Exception as e:
             import logging

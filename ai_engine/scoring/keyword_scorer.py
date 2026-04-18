@@ -11,6 +11,7 @@ Supports both exact and stem-based matching so that morphological variants
 
 import re
 from collections import Counter
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 # ── Stop-words ────────────────────────────────────────────────────────────────
@@ -91,10 +92,13 @@ def _stem_set(tokens: set[str]) -> set[str]:
 def score_keyword_match(
     resume_text: str,
     jd_text: str,
+    model=None,
     *,
     top_n: int = 50,
     stem_weight: float = 0.75,
+    semantic_weight: float = 0.85,
 ) -> dict:
+
     """
     Compute a mathematical keyword-match score between a resume and a JD.
 
@@ -133,13 +137,28 @@ def score_keyword_match(
 
     resume_tokens = _token_set(resume_text)
     resume_stems  = _stem_set(resume_tokens)
+    
+    # Pre-calculate resume embeddings if using semantic mode
+    resume_embs = None
+    jd_embs = None
+    token_list = sorted(list(resume_tokens))
+    jd_keyword_list = [kw for kw, _ in sorted_jd_keywords]
+    
+    if model and token_list and jd_keyword_list:
+        try:
+            resume_embs = model.encode(token_list)
+            jd_embs = model.encode(jd_keyword_list)
+        except Exception as e:
+            print(f"Embedding error: {e}")
+            resume_embs = None
+            jd_embs = None
 
     matched_weighted = 0.0
     total_weighted   = 0.0
     matched_keywords: list[str] = []
     missing_keywords: list[str] = []
 
-    for keyword, freq in sorted_jd_keywords:
+    for i, (keyword, freq) in enumerate(sorted_jd_keywords):
         total_weighted += freq
 
         if keyword in resume_tokens:
@@ -150,8 +169,25 @@ def score_keyword_match(
             # Stem match — partial credit
             matched_weighted += freq * stem_weight
             matched_keywords.append(keyword)
+        elif model and jd_embs is not None and resume_embs is not None and i < len(jd_embs):
+            # Semantic match — partial credit if normalized similarity > 0.7
+            jd_emb = jd_embs[i]
+            # Find max similarity in resume embs
+            similarities = cosine_similarity([jd_emb], resume_embs)[0]
+            max_sim_raw = max(similarities) if len(similarities) > 0 else -1
+            
+            # Normalize raw cosine similarity from [-1, 1] to [0, 1]
+            max_sim_normalized = (max_sim_raw + 1.0) / 2.0
+            
+            if max_sim_normalized > 0.7:  # Normalized threshold (0.7 ≈ 0.4 raw cosine)
+                # Semantic concept found!
+                matched_weighted += freq * semantic_weight
+                matched_keywords.append(keyword)
+            else:
+                missing_keywords.append(keyword)
         else:
             missing_keywords.append(keyword)
+
 
     score = (matched_weighted / total_weighted * 100) if total_weighted > 0 else 0.0
     score = round(min(100.0, max(0.0, score)), 1)

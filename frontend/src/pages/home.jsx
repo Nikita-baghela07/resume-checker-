@@ -80,8 +80,9 @@ export default function Home({ onOptimize, error }) {
   })
 
   // ── Submit ────────────────────────────────────────────────────────────────
-  const canSubmit = resumeText.trim().length >= 50 && jobDesc.trim().length >= 50
-  const submitHint = !resumeText.trim() ? 'Upload or paste your resume (min 50 characters)' : 
+  const canSubmit = resumeText.trim().length >= 300 && jobDesc.trim().length >= 50
+  const submitHint = !resumeText.trim() ? 'Upload or paste your resume (min 300 characters)' : 
+                     resumeText.trim().length < 300 ? 'Resume text is too brief (min 300 characters)' :
                      !jobDesc.trim() ? 'Paste a job description (min 50 characters)' :
                      'Results in ~10 seconds · No data stored'
 
@@ -127,7 +128,7 @@ export default function Home({ onOptimize, error }) {
                   <span className="text-xs font-semibold text-white">{user.full_name || user.email}</span>
                   <button 
                     onClick={logout}
-                    className="text-[10px] text-slate-500 hover:text-brand-400 uppercase tracking-widest font-bold transition-colors"
+                    className="p-1 -mr-1 text-[10px] text-slate-500 hover:text-brand-400 uppercase tracking-widest font-bold transition-colors"
                   >
                     Logout
                   </button>
@@ -201,7 +202,7 @@ export default function Home({ onOptimize, error }) {
                     </label>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => { setResumeText(SAMPLE_RESUME); setResumeFile(null); }}
+                        onClick={() => { setResumeText(SAMPLE_RESUME); setResumeFile(null); setInputMode('paste'); }}
                         className="text-xs text-slate-500 hover:text-brand-400 transition-colors"
                       >
                         Try demo →

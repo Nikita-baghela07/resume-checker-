@@ -1,0 +1,17 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "env": {
+    "VITE_API_URL": {
+      "value": "https://optiresume-ai-backend.onrender.com"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

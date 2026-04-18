@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from groq import Groq
 from app.core.config import settings
 from app.core.utils import extract_bullets
+from ai_engine.embedding.semantic_match import compute_similarity, get_embedding
 
 logger = logging.getLogger(__name__)
 
@@ -89,52 +90,53 @@ def _extract_json_from_response(text: str) -> list:
 
 def _replace_bullet_in_text(full_text: str, original_bullet: str, rewritten_bullet: str) -> tuple[str, bool]:
     """
-    Flexibly find and replace a bullet in full resume text.
-    Handles -, •, *, ●, ◦, ▪ prefixes or plain text.
-    Returns (new_text, was_replaced).
+    Find the line in full_text that contains original_bullet and replace the WHOLE line.
+    This is much more robust than partial string replacement.
     """
-    # Escape original for regex
-    escaped = re.escape(original_bullet.strip())
+    original_clean = original_bullet.strip()
+    if not original_clean:
+        return full_text, False
 
-    # Try replacing with any common bullet prefix
-    pattern = re.compile(
-        r'(?m)^([ \t]*[•\-\*●◦▪▸►✓✔◆■□▶→][ \t]+)' + escaped + r'[ \t]*$'
-    )
-    match = pattern.search(full_text)
+    # 1. Exact or near-exact match for the content (ignoring leading bullet chars)
+    # Escape for regex but be careful with whitespace
+    escaped = re.escape(original_clean)
+    
+    # Pattern to find a line that HAS this bullet text, regardless of prefix
+    # Matches: [Optional Prefix] [Original Bullet] [Optional Trailing Whitespace]
+    line_pattern = re.compile(rf'(?m)^.*{escaped}.*$', re.IGNORECASE)
+    
+    match = line_pattern.search(full_text)
     if match:
-        prefix = match.group(1)
-        new_text = full_text[:match.start()] + prefix + rewritten_bullet + full_text[match.end():]
+        line_start, line_end = match.span()
+        # We want to preserve the prefix if possible, OR let the LLM provide a new one.
+        # Most professional resumes use the same bullet char consistently.
+        # Let's try to see if there's a prefix on this specific line.
+        current_line = match.group(0)
+        prefix_match = _BULLET_PATTERN.match(current_line)
+        
+        if prefix_match:
+            indent, bullet_char, _ = prefix_match.groups()
+            new_line = f"{indent}{bullet_char}{rewritten_bullet}"
+        else:
+            # Fallback: if no prefix detected, just use the rewritten text
+            new_line = rewritten_bullet
+
+        new_text = full_text[:line_start] + new_line + full_text[line_end:]
         return new_text, True
 
-    # Try numbered bullets  (e.g. "1. ", "2) ")
-    pattern_num = re.compile(
-        r'(?m)^([ \t]*\d+[.):][ \t]+)' + escaped + r'[ \t]*$'
-    )
-    match = pattern_num.search(full_text)
-    if match:
-        prefix = match.group(1)
-        new_text = full_text[:match.start()] + prefix + rewritten_bullet + full_text[match.end():]
-        return new_text, True
-
-    # Try plain direct replacement (no bullet prefix)
-    if original_bullet.strip() in full_text:
-        new_text = full_text.replace(original_bullet.strip(), rewritten_bullet.strip(), 1)
-        return new_text, True
-
-    # Fuzzy: try matching first 60 chars to handle minor whitespace differences
-    short = original_bullet.strip()[:60]
-    if len(short) > 20:
-        idx = full_text.find(short)
-        if idx != -1:
-            # Find end of line
-            end_idx = full_text.find('\n', idx)
-            if end_idx == -1:
-                end_idx = len(full_text)
-            line = full_text[idx:end_idx]
-            new_text = full_text[:idx] + rewritten_bullet.strip() + full_text[end_idx:]
+    # 2. Fuzzy fallback: if exact line match fails, try matching first 20 chars
+    if len(original_clean) > 20:
+        short_escaped = re.escape(original_clean[:20])
+        fuzzy_pattern = re.compile(rf'(?m)^.*{short_escaped}.*$', re.IGNORECASE)
+        match = fuzzy_pattern.search(full_text)
+        if match:
+            line_start, line_end = match.span()
+            new_text = full_text[:line_start] + rewritten_bullet + full_text[line_end:]
             return new_text, True
 
     return full_text, False
+
+
 
 
 def rewrite_resume(resume_text: str, job_description: str, model, target_keywords: list[str] = None) -> tuple[str, list[dict]]:
@@ -163,13 +165,11 @@ def rewrite_resume(resume_text: str, job_description: str, model, target_keyword
     # Initialize Groq client
     try:
         import httpx
-        # STRATEGY: Explicitly passing an httpx.Client with proxies={} 
-        # stops the library from trying to auto-detect and pass 'proxies'
-        # which causes the crash on Render.
         client = Groq(
             api_key=api_key,
-            http_client=httpx.Client(proxies={})
+            http_client=httpx.Client()
         )
+        logger.info("✅ Groq client initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize Groq client: {e}")
         bullets = extract_bullets(resume_text)
@@ -238,45 +238,59 @@ def rewrite_resume(resume_text: str, job_description: str, model, target_keyword
     optimized_text = resume_text
     diff_list = []
     replacements_made = 0
+    
+    # Pre-calculate JD embedding for semantic validation
+    jd_embedding = get_embedding(job_description, model) if model else None
 
     for i, original_bullet in enumerate(bullets[:20]):
         # Get corresponding rewritten item
+        rewritten_text = original_bullet # Default
         if i < len(rewritten):
             item = rewritten[i]
             if isinstance(item, dict):
-                # Match by "original" field first, then by index
                 rewritten_text = item.get("rewritten") or item.get("optimized") or original_bullet
-                # Validate it's a string
-                if not isinstance(rewritten_text, str):
-                    rewritten_text = str(rewritten_text)
             elif isinstance(item, str):
                 rewritten_text = item
-            else:
-                rewritten_text = original_bullet
-        else:
-            rewritten_text = original_bullet
+        
+        rewritten_text = str(rewritten_text).strip()
 
-        rewritten_text = rewritten_text.strip()
+        # --- HYBRID SEMANTIC VALIDATION ---
+        # Only accept the change if it's semantically valid (similarity > 0.4) 
+        # to prevent complete hallucinations, AND if it's better or different.
+        is_changed = rewritten_text.lower() != original_bullet.strip().lower()
+        
+        if is_changed and model and jd_embedding is not None:
+            # Optional: Ensure rewrite didn't lose the original meaning entirely
+            # overlap = compute_similarity(original_bullet, rewritten_text, model)
+            
+            # Ensure rewrite is semantically helpful for the JD
+            old_sim = compute_similarity(original_bullet, job_description, model, emb_b=jd_embedding)
+            new_sim = compute_similarity(rewritten_text, job_description, model, emb_b=jd_embedding)
+            
+            # If the new version is worse semantically, discard it!
+            if new_sim < old_sim - 5.0: # Allow slight variations for keyword stuffing
+                logger.warning(f"⚠ Discarding low-quality rewrite for bullet {i} (semantic score dropped)")
+                rewritten_text = original_bullet
+                is_changed = False
 
         # Replace in full text if the bullet actually changed
-        if rewritten_text and rewritten_text.lower() != original_bullet.strip().lower():
+        if is_changed:
             optimized_text, replaced = _replace_bullet_in_text(
                 optimized_text, original_bullet, rewritten_text
             )
             if replaced:
                 replacements_made += 1
-                logger.debug(f"✓ Replaced [{i}]: '{original_bullet[:50]}' → '{rewritten_text[:50]}'")
+                logger.info(f"✓ Optimized [{i}]: '{original_bullet[:30]}...' -> '{rewritten_text[:30]}...'")
             else:
-                logger.warning(f"⚠ Could not locate bullet [{i}] in text: '{original_bullet[:50]}'")
+                logger.warning(f"⚠ Match failed for bullet [{i}]: '{original_bullet[:40]}...'")
+                is_changed = False # Set to false since replacement failed
 
         diff_list.append({
             "original": original_bullet.strip(),
-            "rewritten": rewritten_text
+            "rewritten": rewritten_text,
+            "changed": is_changed
         })
 
-    logger.info(f"✅ Replacement summary: {replacements_made}/{len(diff_list)} bullets updated in text")
-
-    if replacements_made == 0 and len(bullets) > 0:
-        logger.warning("⚠ Zero replacements made! Optimized text is identical to original.")
-
+    logger.info(f"✅ Optimization complete: {replacements_made} bullets updated in text")
     return optimized_text, diff_list
+

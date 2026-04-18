@@ -29,8 +29,7 @@ async def optimize_resume(
         5. Build diff
         6. Return full response
     """
-    # NEW: Validate pasted content quality
-    validate_resume_quality(data.resume_text)
+    # NEW: Validate pasted content quality happens inside try block now
     
     model = request.app.state.sbert_model
     
@@ -39,6 +38,8 @@ async def optimize_resume(
     logger.info(f"JD length: {len(data.job_description)} chars")
 
     try:
+        validate_resume_quality(data.resume_text)
+        
         # ── Step 1: Score original ────────────────────────────────────────────
         logger.info("1️⃣ Computing initial ATS score...")
         initial_scores = scoring_service.compute_scores(
