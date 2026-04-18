@@ -46,17 +46,17 @@ Action: Connect your GitHub account
 
 **BUILD COMMAND:**
 ```
-pip install -r resume-checker-/backend/requirements-deploy.txt
+pip install -r backend/requirements-deploy.txt
 ```
 
 **START COMMAND:**
 ```
-cd resume-checker-/backend && gunicorn -w 2 -b 0.0.0.0:8000 --timeout 120 --access-logfile - run:app
+cd backend && gunicorn -w 2 -b 0.0.0.0:8000 --timeout 120 --access-logfile - run:app
 ```
 
 **REGION:** `Ohio` (or closest to you)
 
-**PLAN:** `Starter` (512 MB RAM, $7/month)
+**PLAN:** `Free` (512 MB RAM, $0/month - may spin down after 15 min inactivity)
 
 ### Step 4: Add Environment Variables
 
@@ -152,7 +152,7 @@ Expected: ~350 MB (well under 512 MB limit)
 ```
 1. Check requirements-deploy.txt exists in GitHub
 2. Verify build command path: 
-   resume-checker-/backend/requirements-deploy.txt
+   backend/requirements-deploy.txt (NOT resume-checker-/backend/...)
 3. Click "Manual Deploy" to retry
 ```
 
@@ -278,10 +278,12 @@ After backend is deployed:
 ## 💰 COST CONFIRMATION
 
 After deployment:
-- Render: $7/month (Starter plan, 512 MB)
+- Render: FREE (free tier, 512 MB)
 - Vercel: FREE (deploy frontend)
 - Groq API: $2-5/month (usage-based)
-- **TOTAL: $9-12/month** ✨
+- **TOTAL: $2-5/month** ✨
+
+**Note:** Free Render spins down after 15 minutes of inactivity. First request after spin-down takes ~30 seconds. For production, consider upgrading to Starter ($7/month).
 
 ---
 
