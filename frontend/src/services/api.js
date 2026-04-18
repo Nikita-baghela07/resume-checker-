@@ -1,10 +1,13 @@
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
+// Use environment variable with fallback
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://optiresume-ai-backend-payw.onrender.com'
+
+console.log('🔌 API Base URL:', BASE_URL)
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 60000, 
+  timeout: 60000,
 })
 
 // ─── Upload ───────────────────────────────────────────────────────────────────
