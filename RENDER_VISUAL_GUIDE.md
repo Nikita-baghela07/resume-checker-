@@ -38,74 +38,49 @@ Action: Connect your GitHub account
 
 **Copy these settings exactly:**
 
+**NAME:** `optiresume-ai-backend`
+
+**BRANCH:** `main`
+
+**RUNTIME:** `Python 3.11`
+
+**BUILD COMMAND:**
 ```
-┌─────────────────────────────────────────────┐
-│ NAME:                                       │
-│ optiresume-ai-backend                       │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ BRANCH:                                     │
-│ main                                        │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ RUNTIME:                                    │
-│ Python 3.11                                 │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ BUILD COMMAND:                              │
-│ pip install -r                              │
-│ resume-checker-/backend/requirements-      │
-│ deploy.txt                                  │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ START COMMAND:                              │
-│ cd resume-checker-/backend &&               │
-│ gunicorn -w 2 -b 0.0.0.0:8000               │
-│ --timeout 120 --access-logfile - run:app    │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ REGION:                                     │
-│ Ohio (or closest to you)                    │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ PLAN:                                       │
-│ Starter (512 MB RAM, $7/month)             │
-└─────────────────────────────────────────────┘
+pip install -r resume-checker-/backend/requirements-deploy.txt
 ```
+
+**START COMMAND:**
+```
+cd resume-checker-/backend && gunicorn -w 2 -b 0.0.0.0:8000 --timeout 120 --access-logfile - run:app
+```
+
+**REGION:** `Ohio` (or closest to you)
+
+**PLAN:** `Starter` (512 MB RAM, $7/month)
 
 ### Step 4: Add Environment Variables
 
-Scroll down to **"Environment"** section
+Scroll down to **"Environment"** section and click **"Add Environment Variable"** for each:
 
-**Add each variable one by one:**
+**1. GROQ_API_KEY**
+- Key: `GROQ_API_KEY`
+- Value: `gsk_your_actual_key_from_groq`
+- Click "Add"
 
-```
-1. GROQ_API_KEY
-   ├─ Key: GROQ_API_KEY
-   ├─ Value: gsk_your_actual_key_from_groq
-   └─ Click "Add"
+**2. ENABLE_SBERT_MODEL** ⚠️ **CRITICAL!**
+- Key: `ENABLE_SBERT_MODEL`
+- Value: `false` (lowercase)
+- Click "Add"
 
-2. ENABLE_SBERT_MODEL (⚠️ CRITICAL!)
-   ├─ Key: ENABLE_SBERT_MODEL
-   ├─ Value: false  (lowercase)
-   └─ Click "Add"
+**3. ALLOWED_ORIGINS**
+- Key: `ALLOWED_ORIGINS`
+- Value: `http://localhost:5173`
+- Click "Add"
 
-3. ALLOWED_ORIGINS
-   ├─ Key: ALLOWED_ORIGINS
-   ├─ Value: http://localhost:5173
-   └─ Click "Add"
-
-4. PYTHONUNBUFFERED
-   ├─ Key: PYTHONUNBUFFERED
-   ├─ Value: 1
-   └─ Click "Add"
-```
+**4. PYTHONUNBUFFERED**
+- Key: `PYTHONUNBUFFERED`
+- Value: `1`
+- Click "Add"
 
 ### Step 5: Deploy!
 
