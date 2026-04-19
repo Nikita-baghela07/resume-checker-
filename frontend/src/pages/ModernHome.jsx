@@ -14,17 +14,49 @@ export default function Home() {
   const [fileName, setFileName] = useState('');
   const [optimizing, setOptimizing] = useState(false);
   const [uploadedResumeText, setUploadedResumeText] = useState('');
+  const [uploadError, setUploadError] = useState('');
 
   const checkReady = () => {
-    const hasResume = mode === 'upload' ? hasFile : resumeText.trim().length >= 100;
+    let hasResume;
+    if (mode === 'upload') {
+      hasResume = uploadedResumeText.trim().length >= 3000;
+    } else {
+      hasResume = resumeText.trim().length >= 3000;
+    }
     const hasJD = jdText.trim().length >= 50;
     return hasResume && hasJD;
   };
 
-  const handleFileSelect = (file) => {
-    if (file && file.type === 'application/pdf') {
+  const handleFileSelect = async (file) => {
+    if (!file || file.type !== 'application/pdf') {
+      setUploadError('Please select a valid PDF file');
+      return;
+    }
+
+    setUploadError('');
+    setOptimizing(true);
+    
+    try {
+      const result = await uploadResume(file);
+      if (!result.resume_text) {
+        throw new Error('Failed to extract text from PDF');
+      }
+      
+      const extractedText = result.resume_text;
+      setUploadedResumeText(extractedText);
       setHasFile(true);
       setFileName(file.name);
+      
+      if (extractedText.trim().length < 3000) {
+        setUploadError(`PDF only has ${extractedText.length} characters. Need at least 3000 characters.`);
+        setHasFile(false);
+      }
+    } catch (err) {
+      console.error('File upload error:', err);
+      setUploadError(err.message || 'Failed to process PDF');
+      setHasFile(false);
+    } finally {
+      setOptimizing(false);
     }
   };
 
@@ -38,24 +70,13 @@ export default function Home() {
       // Get resume text (from upload or paste)
       let finalResumeText = resumeText;
 
-      if (mode === 'upload' && hasFile) {
-        const fileInput = document.getElementById('file-input');
-        if (fileInput && fileInput.files[0]) {
-          console.log('Uploading file:', fileInput.files[0].name);
-          const uploadResult = await uploadResume(fileInput.files[0]);
-          console.log('Upload result:', uploadResult);
-          
-          if (!uploadResult.resume_text) {
-            throw new Error('Failed to extract text from PDF. Please try a different file.');
-          }
-          
-          finalResumeText = uploadResult.resume_text;
-          setUploadedResumeText(finalResumeText);
-        }
+      if (mode === 'upload' && hasFile && uploadedResumeText) {
+        // Already extracted during file selection
+        finalResumeText = uploadedResumeText;
       }
 
-      if (!finalResumeText || finalResumeText.length < 100) {
-        throw new Error(`Resume must be at least 100 characters (currently ${finalResumeText.length} characters)`);
+      if (!finalResumeText || finalResumeText.length < 3000) {
+        throw new Error(`Resume must be at least 3000 characters (currently ${finalResumeText.length} characters)`);
       }
       
       if (!jdText || jdText.length < 50) {
@@ -199,14 +220,21 @@ export default function Home() {
               )}
 
               {/* File Selected */}
-              {hasFile && (
+              {hasFile && uploadedResumeText && (
                 <div className="drop-success show">
                   <div className="drop-success-icon">✓</div>
                   <div>
                     <div className="drop-success-name">{fileName}</div>
-                    <div className="drop-success-meta">Ready to optimize</div>
+                    <div className="drop-success-meta">{uploadedResumeText.length} characters • Ready to optimize</div>
                   </div>
-                  <button className="drop-success-remove" onClick={() => { setHasFile(false); setFileName(''); }}>×</button>
+                  <button className="drop-success-remove" onClick={() => { setHasFile(false); setFileName(''); setUploadedResumeText(''); }}>×</button>
+                </div>
+              )}
+              
+              {/* Upload Error */}
+              {uploadError && (
+                <div style={{ padding: '12px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '6px', color: '#991B1B', fontSize: '14px' }}>
+                  {uploadError}
                 </div>
               )}
 
@@ -221,8 +249,8 @@ export default function Home() {
                     style={{ minHeight: '120px' }}
                   />
                   <div className="jd-count">
-                    <span>{resumeText.length}</span> / 100 characters minimum
-                    {resumeText.length < 100 && <span style={{ color: '#EF4444', marginLeft: '8px' }}>({100 - resumeText.length} more needed)</span>}
+                    <span>{resumeText.length}</span> / 3000 characters minimum
+                    {resumeText.length < 3000 && <span style={{ color: '#EF4444', marginLeft: '8px' }}>({3000 - resumeText.length} more needed)</span>}
                   </div>
                 </>
               )}
@@ -250,15 +278,17 @@ export default function Home() {
             <button
               className="optimize-btn"
               onClick={handleOptimize}
-              disabled={!checkReady() || optimizing}
-              style={{ opacity: !checkReady() || optimizing ? 0.6 : 1, cursor: !checkReady() || optimizing ? 'not-allowed' : 'pointer' }}
+              disabled={!checkReady() || optimizing || uploadError}
+              style={{ opacity: !checkReady() || optimizing || uploadError ? 0.6 : 1, cursor: !checkReady() || optimizing || uploadError ? 'not-allowed' : 'pointer' }}
             >
-              {optimizing ? '⟳ Optimizing...' : 'Optimize My Resume →'}
+              {optimizing && mode === 'upload' ? '⟳ Processing PDF...' : optimizing ? '⟳ Optimizing...' : 'Optimize My Resume →'}
             </button>
             <div className="btn-hint">
-              {!checkReady() ? (
-                resumeText.length < 100 && mode === 'paste' 
-                  ? `Resume too short: ${100 - resumeText.length} more characters needed`
+              {uploadError ? uploadError : !checkReady() ? (
+                mode === 'paste' && resumeText.length < 3000
+                  ? `Resume too short: ${3000 - resumeText.length} more characters needed`
+                  : jdText.length < 50
+                  ? 'Paste a job description to continue'
                   : 'Upload your resume (PDF) and paste a job description to continue'
               ) : 'No data stored · ATS-safe output guaranteed'}
             </div>

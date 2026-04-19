@@ -75,6 +75,7 @@ app = FastAPI(
 )
 
 # CORS — allow React frontend
+logger.info(f"Configuring CORS with allowed origins: {settings.ALLOWED_ORIGINS}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -83,6 +84,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+logger.info("✅ CORS middleware configured")
 
 
 # ─── Global Error Handler ─────────────────────────────────────────────────────

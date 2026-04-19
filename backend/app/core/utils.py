@@ -138,10 +138,10 @@ def validate_resume_quality(text: str) -> None:
     cleaned = text.strip()
     
     # 1. Length check
-    if len(cleaned) < 100:
+    if len(cleaned) < 3000:
         raise ValueError(
             f"The provided content is too short ({len(cleaned)} characters). "
-            "A resume should be at least 100 characters long."
+            "A resume should be at least 3000 characters long."
         )
     
     # 2. Section check
