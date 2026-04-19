@@ -1,82 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Import Modern Design System */
+@import './styles/modern.css';
 
-@layer base {
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    background: #0a0e1a;
-    color: #e2e8f0;
-    font-family: 'Inter', system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #1a1f2e;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #3a55e8;
-    border-radius: 3px;
-  }
+/* Override any remaining old styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@layer components {
-  .glass-card {
-    @apply bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm;
-  }
+html {
+  scroll-behavior: smooth;
+}
 
-  .btn-primary {
-    @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold
-           px-6 py-3 rounded-xl transition-all duration-200
-           hover:shadow-lg hover:shadow-brand-500/25 active:scale-95;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-  .btn-secondary {
-    @apply bg-white/10 hover:bg-white/15 text-white font-medium
-           px-5 py-2.5 rounded-xl border border-white/20
-           transition-all duration-200 active:scale-95;
-  }
-
-  .score-bar-track {
-    @apply h-2.5 bg-white/10 rounded-full overflow-hidden;
-  }
-
-  .section-title {
-    @apply text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3;
-  }
-
-  .tag-high   { @apply bg-red-500/20 text-red-300 border border-red-500/30; }
-  .tag-medium { @apply bg-yellow-500/20 text-yellow-300 border border-yellow-500/30; }
-  .tag-low    { @apply bg-green-500/20 text-green-300 border border-green-500/30; }
-
-  .input-field {
-    @apply w-full px-4 py-3 rounded-xl text-white placeholder-slate-500
-           border border-white/10 outline-none
-           transition-all duration-200
-           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
-    background-color: rgba(255, 255, 255, 0.05) !important;
-  }
-
-  /* Override browser autofill white background */
-  .input-field:-webkit-autofill,
-  .input-field:-webkit-autofill:hover,
-  .input-field:-webkit-autofill:focus {
-    -webkit-text-fill-color: #e2e8f0 !important;
-    -webkit-box-shadow: 0 0 0px 1000px #0d1117 inset !important;
-    box-shadow: 0 0 0px 1000px #0d1117 inset !important;
-    transition: background-color 5000s ease-in-out 0s;
-  }
+/* Remove any conflicting Tailwind classes */
+.min-h-screen,
+.bg-\[\#0a0e1a\],
+[class*="bg-slate"],
+[class*="bg-gray"] {
+  background: var(--bg) !important;
+  color: var(--text) !important;
 }
