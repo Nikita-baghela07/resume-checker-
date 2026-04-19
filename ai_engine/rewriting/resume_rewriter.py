@@ -209,10 +209,11 @@ def rewrite_resume(resume_text: str, job_description: str, model, target_keyword
         f"{keywords_str}"
         f"\nResume Bullets to Optimize ({min(len(bullets), 20)} bullets):\n"
         f"{bullets_text}\n\n"
-        "Rewrite every bullet to incorporate relevant keywords from the job description. "
-        "Always improve — do NOT leave bullets unchanged unless truly impossible.\n"
+        "Rewrite bullets to better match this job description by incorporating relevant keywords and metrics.\n"
+        "IMPORTANT: Keep rewrites truthful. Only modify the phrasing/framing—do NOT add skills, tools, or metrics that aren't in the original.\n"
+        "If a bullet is already strong or cannot be improved without adding fake information, return it UNCHANGED.\n"
         "Return ONLY a valid JSON array with no markdown fences:\n"
-        '[{"original": "exact original text", "rewritten": "improved text"}, ...]'
+        '[{"original": "exact original text", "rewritten": "improved text or same if no changes needed"}, ...]'
     )
 
     try:
@@ -259,29 +260,41 @@ def rewrite_resume(resume_text: str, job_description: str, model, target_keyword
         
         rewritten_text = str(rewritten_text).strip()
 
-        # --- LENIENT VALIDATION (KEYWORD-FOCUSED) ---
-        # Accept rewrites if they're different from original.
-        # We PRIORITIZE KEYWORD COVERAGE over semantic similarity.
-        # Keyword-rich rewrites might be longer and less similar to the original, 
-        # but that's OK—we want better ATS scores, not semantic perfection!
+        # Check if rewritten text is the same as original (no change)
         is_changed = rewritten_text.lower() != original_bullet.strip().lower()
         
-        # OPTIONAL: Only reject if the rewrite is SEVERELY hallucinated
-        # (i.e., completely loses connection to the original topic)
-        if is_changed and model and jd_embedding is not None:
-            old_sim = compute_similarity(original_bullet, job_description, model, emb_b=jd_embedding)
-            new_sim = compute_similarity(rewritten_text, job_description, model, emb_b=jd_embedding)
+        # --- STRICT HALLUCINATION DETECTION ---
+        # Reject rewrites that add too much new content not in the original
+        if is_changed:
+            original_words = set(original_bullet.lower().split())
+            rewritten_words = set(rewritten_text.lower().split())
             
-            # ONLY reject if SEVERELY worse (> 15 point drop), not minor drops
-            # This allows keyword-focused rewrites to pass through
-            if new_sim < old_sim - 15.0: 
-                logger.warning(f"⚠ Discarding severely hallucinated rewrite for bullet {i} (semantic score dropped {old_sim - new_sim:.1f} points)")
+            # Count NEW words that weren't in original (excluding common words and connectors)
+            common_words = {'a', 'an', 'the', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'as', 'be', 'been', 'being', 'do', 'does', 'did', 'have', 'has', 'had', 'would', 'could', 'should', 'will', 'can', 'that', 'this', 'which', 'who', 'where', 'when', 'why', 'how'}
+            new_words = rewritten_words - original_words - common_words
+            original_significant_words = len(original_words - common_words)
+            new_significant_ratio = len(new_words) / max(original_significant_words, 1)
+            
+            # If more than 30% new significant words, likely hallucination
+            if new_significant_ratio > 0.30:
+                logger.warning(f"⚠ Potential hallucination detected for bullet {i}: {new_significant_ratio*100:.0f}% new words added. Rejecting rewrite.")
                 rewritten_text = original_bullet
                 is_changed = False
-            elif new_sim >= old_sim:
-                logger.info(f"✓ Semantic improvement for bullet {i}: {old_sim:.1f} → {new_sim:.1f}")
-            else:
-                logger.info(f"✓ Keyword-focused rewrite for bullet {i} (slight semantic drop {old_sim - new_sim:.1f}pt, but better keywords)")
+            
+            # Additional semantic check: reject if semantic similarity drops significantly
+            elif model and jd_embedding is not None:
+                old_sim = compute_similarity(original_bullet, job_description, model, emb_b=jd_embedding)
+                new_sim = compute_similarity(rewritten_text, job_description, model, emb_b=jd_embedding)
+                
+                # Reject if semantic quality drops more than 10 points
+                if new_sim < old_sim - 10.0: 
+                    logger.warning(f"⚠ Discarding semantically poor rewrite for bullet {i} (score dropped from {old_sim:.1f} to {new_sim:.1f})")
+                    rewritten_text = original_bullet
+                    is_changed = False
+                elif new_sim >= old_sim:
+                    logger.info(f"✓ Improved bullet {i}: {old_sim:.1f} → {new_sim:.1f}")
+                else:
+                    logger.info(f"✓ Optimized bullet {i} (score {old_sim:.1f} → {new_sim:.1f})")
 
         # Replace in full text if the bullet actually changed
         if is_changed:
