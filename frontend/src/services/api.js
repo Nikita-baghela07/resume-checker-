@@ -14,18 +14,26 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Extract meaningful error message from backend
+    let errorMessage = error.message;
+    
+    if (error.response?.data?.detail) {
+      errorMessage = error.response.data.detail;
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+    
     console.error('API Error Details:', {
       status: error.response?.status,
       data: error.response?.data,
-      message: error.message,
+      extracted_message: errorMessage,
+      original_message: error.message,
       code: error.code,
       url: error.config?.url,
     });
     
-    // Ensure error has proper message
-    if (error.response?.data?.detail && !error.message) {
-      error.message = error.response.data.detail;
-    }
+    // Set the extracted message on the error object
+    error.message = errorMessage;
     
     return Promise.reject(error);
   }
