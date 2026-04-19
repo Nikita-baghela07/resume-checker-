@@ -13,8 +13,6 @@ class OptimizeRequest(BaseModel):
     def must_not_be_empty(cls, v: str) -> str:
         if not v or not v.strip():
             raise ValueError("Field cannot be empty")
-        if len(v.strip()) < 50:
-            raise ValueError("Text is too short to be valid")
         return v.strip()
 
 

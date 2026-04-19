@@ -129,7 +129,7 @@ def validate_resume_quality(text: str) -> None:
     Validate if the provided text looks like a professional resume.
     
     Checks:
-    1. Presence of at least 2 standard resume section headers
+    1. Presence of at least 2 standard resume section keywords
     
     Raises:
         ValueError: If validation fails with a specific reason.
@@ -151,25 +151,15 @@ def validate_resume_quality(text: str) -> None:
     ]
     
     text_lower = cleaned.lower()
-    found_sections = []
     
-    for kw in SECTION_KEYWORDS:
-        # Look for the keyword as a potential header (often surrounded by newlines or at start)
-        # Using a more robust regex for header detection
-        if re.search(rf'(?m)^[ \t]*{re.escape(kw)}[ \t]*[:\-]?$', text_lower, re.IGNORECASE) or \
-           re.search(rf'(?m)^[ \t]*[•\-\*●◦▪▸►✓✔◆■□▶→]?[ \t]*{re.escape(kw)}', text_lower, re.IGNORECASE):
-            found_sections.append(kw)
+    # Check for presence of resume-like keywords (lenient matching)
+    found_keywords = [kw for kw in SECTION_KEYWORDS if kw in text_lower]
+    unique_keywords = set(found_keywords)
     
-    # Deduplicate and check count
-    unique_sections = set(found_sections)
-    
-    # Fallback: if no strict headers found, check for general keyword density
-    if len(unique_sections) < 2:
-        # Check for general presence of the keywords anywhere (more lenient)
-        general_matches = [kw for kw in SECTION_KEYWORDS if kw in text_lower]
-        if len(set(general_matches)) < 3:
-            raise ValueError(
-                "This document doesn't look like a professional resume. "
-                "It is missing standard sections like 'Experience', 'Education', or 'Skills'. "
-                "Please upload a valid resume or paste your full professional details."
-            )
+    # Require at least 2 distinct resume keywords to validate as a resume
+    if len(unique_keywords) < 2:
+        raise ValueError(
+            "This document doesn't look like a professional resume. "
+            "It is missing standard sections like 'Experience', 'Education', or 'Skills'. "
+            "Please upload a valid resume or paste your full professional details."
+        )
