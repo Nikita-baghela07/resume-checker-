@@ -28,11 +28,25 @@ export default function App() {
     <OptimizationProvider>
       <Router>
         <Routes>
+          {/* Public routes */}
           <Route path="/auth" element={<ModernAuthPage />} />
-          <Route path="/" element={<ModernHome />} />
-          <Route path="/loading" element={<ModernLoadingPage />} />
-          <Route path="/results" element={<ModernResultsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          
+          {/* Protected routes - require authentication */}
+          <Route 
+            path="/" 
+            element={user ? <ModernHome /> : <Navigate to="/auth" replace />} 
+          />
+          <Route 
+            path="/loading" 
+            element={user ? <ModernLoadingPage /> : <Navigate to="/auth" replace />} 
+          />
+          <Route 
+            path="/results" 
+            element={user ? <ModernResultsPage /> : <Navigate to="/auth" replace />} 
+          />
+          
+          {/* Redirect unknown routes to home or auth */}
+          <Route path="*" element={<Navigate to={user ? "/" : "/auth"} replace />} />
         </Routes>
       </Router>
     </OptimizationProvider>
