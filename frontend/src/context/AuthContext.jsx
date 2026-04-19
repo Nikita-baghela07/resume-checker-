@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
 
   const validateToken = async (token) => {
     try {
-      const response = await api.get('/auth/me', {
+      const response = await api.get('/api/v1/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/api/v1/auth/login', { email, password });
     const { access_token } = response.data;
     localStorage.setItem('token', access_token);
     const authHeader = `Bearer ${access_token}`;
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (email, password, fullName) => {
-    await api.post('/auth/register', { email, password, full_name: fullName });
+    await api.post('/api/v1/auth/register', { email, password, full_name: fullName });
   };
 
   const logout = () => {

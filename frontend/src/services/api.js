@@ -21,7 +21,7 @@ export const uploadResume = async (file) => {
   const formData = new FormData()
   formData.append('file', file)
 
-  const res = await api.post('/upload', formData, {
+  const res = await api.post('/api/v1/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
   return res.data
@@ -47,7 +47,7 @@ export const uploadResume = async (file) => {
  * }
  */
 export const optimizeResume = async (resumeText, jobDescription) => {
-  const res = await api.post('/optimize', {
+  const res = await api.post('/api/v1/optimize', {
     resume_text:     resumeText,
     job_description: jobDescription,
   })
@@ -63,7 +63,7 @@ export const optimizeResume = async (resumeText, jobDescription) => {
  */
 export const downloadPDF = async (optimizedResume, candidateName = 'Candidate') => {
   const res = await api.post(
-    '/download',
+    '/api/v1/download',
     { optimized_resume: optimizedResume, candidate_name: candidateName },
     { responseType: 'blob' }
   )
