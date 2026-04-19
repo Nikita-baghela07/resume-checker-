@@ -106,10 +106,38 @@ app.include_router(auth.router,     prefix="/api/v1", tags=["Auth"])
 
 # ─── Health Check ─────────────────────────────────────────────────────────────
 
+@app.get("/", tags=["Root"])
+def root():
+    """Root endpoint - returns API information."""
+    return {
+        "status": "running",
+        "service": "OptiResume AI",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "endpoints": {
+            "health": "/health",
+            "optimize": "POST /api/v1/optimize",
+            "upload": "POST /api/v1/upload",
+            "download": "POST /api/v1/download"
+        }
+    }
+
 @app.get("/health", tags=["Health"])
 def health_check():
+    """Health check endpoint."""
     return {
         "status": "ok",
-        "model_loaded": hasattr(app.state, "sbert_model"),
-        "version": "1.0.0"
+        "model_loaded": hasattr(app.state, "sbert_model") and app.state.sbert_model is not None,
+        "version": "1.0.0",
+        "mode": "hybrid" if hasattr(app.state, "sbert_model") and app.state.sbert_model is not None else "tfidf"
+    }
+
+@app.get("/api/v1/health", tags=["Health"])
+def api_health_check():
+    """API health check endpoint (v1 path)."""
+    return {
+        "status": "ok",
+        "service": "OptiResume AI Backend",
+        "version": "1.0.0",
+        "model_loaded": hasattr(app.state, "sbert_model") and app.state.sbert_model is not None
     }

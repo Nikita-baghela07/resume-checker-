@@ -41,9 +41,10 @@ async def upload_resume(file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
+        # PDF parsing errors are client errors (invalid file), not server errors
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to parse PDF: {str(e)}"
+            status_code=422,
+            detail=f"Failed to parse PDF: {str(e)}. Please ensure the file is a valid PDF."
         )
     finally:
         if os.path.exists(tmp_path):

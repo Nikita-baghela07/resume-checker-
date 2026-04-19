@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Request
 from app.models.request_models import OptimizeRequest, OptimizeResponse, ScorePair
 from app.services import scoring_service, skill_gap_service, rewriter_service
 from app.core.utils import validate_resume_quality
@@ -7,15 +7,10 @@ import logging
 router  = APIRouter()
 logger  = logging.getLogger(__name__)
 
-
-from app.routes.auth import get_current_user
-from app.models.user import User as UserModel
-
 @router.post("/optimize", response_model=OptimizeResponse)
 async def optimize_resume(
     data: OptimizeRequest, 
-    request: Request,
-    current_user: UserModel = Depends(get_current_user)
+    request: Request
 ):
     """
     Core pipeline endpoint.
