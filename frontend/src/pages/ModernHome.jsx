@@ -16,8 +16,8 @@ export default function Home() {
   const [uploadedResumeText, setUploadedResumeText] = useState('');
 
   const checkReady = () => {
-    const hasResume = mode === 'upload' ? hasFile : resumeText.trim().length > 100;
-    const hasJD = jdText.trim().length > 50;
+    const hasResume = mode === 'upload' ? hasFile : resumeText.trim().length >= 300;
+    const hasJD = jdText.trim().length >= 50;
     return hasResume && hasJD;
   };
 
@@ -182,7 +182,10 @@ export default function Home() {
                     onChange={(e) => setResumeText(e.target.value)}
                     style={{ minHeight: '120px' }}
                   />
-                  <div className="jd-count"><span>{resumeText.length}</span> characters</div>
+                  <div className="jd-count">
+                    <span>{resumeText.length}</span> / 300 characters minimum
+                    {resumeText.length < 300 && <span style={{ color: '#EF4444', marginLeft: '8px' }}>({300 - resumeText.length} more needed)</span>}
+                  </div>
                 </>
               )}
             </div>
@@ -215,7 +218,11 @@ export default function Home() {
               {optimizing ? '⟳ Optimizing...' : 'Optimize My Resume →'}
             </button>
             <div className="btn-hint">
-              {!checkReady() ? 'Upload your resume and paste a job description to continue' : 'No data stored · ATS-safe output guaranteed'}
+              {!checkReady() ? (
+                resumeText.length < 300 && mode === 'paste' 
+                  ? `Resume too short: ${300 - resumeText.length} more characters needed`
+                  : 'Upload your resume (PDF) and paste a job description to continue'
+              ) : 'No data stored · ATS-safe output guaranteed'}
             </div>
           </div>
         </div>

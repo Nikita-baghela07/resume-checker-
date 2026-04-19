@@ -12,7 +12,7 @@ class Settings:
     MODEL_NAME: str = os.getenv("MODEL_NAME", "mixtral-8x7b-32768")
     SBERT_MODEL: str = os.getenv("SBERT_MODEL", "all-MiniLM-L6-v2")
     MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "2000"))
-    ALLOWED_ORIGINS: list = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    ALLOWED_ORIGINS: list = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:3000").split(",")
     
     # Deployment Mode: Set to 'false' in production to save 300+ MB RAM
     ENABLE_SBERT_MODEL: bool = os.getenv("ENABLE_SBERT_MODEL", "true").lower() == "true"
