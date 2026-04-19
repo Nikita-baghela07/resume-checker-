@@ -1,10 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  // Tailwind disabled - using custom modern CSS instead
+  // COMPLETELY DISABLED - using custom modern.css instead
+  // Do NOT load any Tailwind styles
+  enabled: false,
   content: [],
   corePlugins: {
     preflight: false,
   },
-  theme: {},
-  plugins: [],
 }

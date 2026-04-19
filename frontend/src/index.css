@@ -1,7 +1,8 @@
-/* Import Modern Design System */
+/* ⛔ DISABLE TAILWIND COMPLETELY */
+/* Import ONLY Modern Design System - NO Tailwind */
 @import './styles/modern.css';
 
-/* Override any remaining old styles */
+/* Base resets */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -20,11 +21,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Remove any conflicting Tailwind classes */
-.min-h-screen,
-.bg-\[\#0a0e1a\],
-[class*="bg-slate"],
-[class*="bg-gray"] {
-  background: var(--bg) !important;
-  color: var(--text) !important;
+/* Force override any Tailwind that might try to load */
+:root {
+  --bg: #F8F6F2 !important;
+  --accent: #D95F2B !important;
 }
