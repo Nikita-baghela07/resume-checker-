@@ -19,9 +19,9 @@ export default function Home() {
   const checkReady = () => {
     let hasResume;
     if (mode === 'upload') {
-      hasResume = uploadedResumeText.trim().length >= 3000;
+      hasResume = uploadedResumeText.trim().length > 0;
     } else {
-      hasResume = resumeText.trim().length >= 3000;
+      hasResume = resumeText.trim().length > 0;
     }
     const hasJD = jdText.trim().length >= 50;
     return hasResume && hasJD;
@@ -46,11 +46,6 @@ export default function Home() {
       setUploadedResumeText(extractedText);
       setHasFile(true);
       setFileName(file.name);
-      
-      if (extractedText.trim().length < 3000) {
-        setUploadError(`PDF only has ${extractedText.length} characters. Need at least 3000 characters.`);
-        setHasFile(false);
-      }
     } catch (err) {
       console.error('File upload error:', err);
       setUploadError(err.message || 'Failed to process PDF');
@@ -75,8 +70,8 @@ export default function Home() {
         finalResumeText = uploadedResumeText;
       }
 
-      if (!finalResumeText || finalResumeText.length < 3000) {
-        throw new Error(`Resume must be at least 3000 characters (currently ${finalResumeText.length} characters)`);
+      if (!finalResumeText || finalResumeText.trim().length === 0) {
+        throw new Error('Resume cannot be empty. Please upload a valid resume or paste your professional details.');
       }
       
       if (!jdText || jdText.length < 50) {
