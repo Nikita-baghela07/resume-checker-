@@ -275,8 +275,9 @@ def rewrite_resume(resume_text: str, job_description: str, model, target_keyword
             original_significant_words = len(original_words - common_words)
             new_significant_ratio = len(new_words) / max(original_significant_words, 1)
             
-            # If more than 30% new significant words, likely hallucination
-            if new_significant_ratio > 0.30:
+            # If more than 200% new significant words, likely hallucination
+            # This allows substantial keyword addition while still catching obvious fabrication
+            if new_significant_ratio > 2.0:
                 logger.warning(f"⚠ Potential hallucination detected for bullet {i}: {new_significant_ratio*100:.0f}% new words added. Rejecting rewrite.")
                 rewritten_text = original_bullet
                 is_changed = False
