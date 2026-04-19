@@ -41,14 +41,35 @@ export default function Home() {
       if (mode === 'upload' && hasFile) {
         const fileInput = document.getElementById('file-input');
         if (fileInput && fileInput.files[0]) {
+          console.log('Uploading file:', fileInput.files[0].name);
           const uploadResult = await uploadResume(fileInput.files[0]);
+          console.log('Upload result:', uploadResult);
+          
+          if (!uploadResult.resume_text) {
+            throw new Error('Failed to extract text from PDF. Please try a different file.');
+          }
+          
           finalResumeText = uploadResult.resume_text;
           setUploadedResumeText(finalResumeText);
         }
       }
 
+      if (!finalResumeText || finalResumeText.length < 300) {
+        throw new Error(`Resume must be at least 300 characters (currently ${finalResumeText.length} characters)`);
+      }
+      
+      if (!jdText || jdText.length < 50) {
+        throw new Error(`Job description must be at least 50 characters (currently ${jdText.length} characters)`);
+      }
+
+      console.log('Starting optimization with:', { 
+        resumeLength: finalResumeText.length, 
+        jdLength: jdText.length 
+      });
+      
       // Call optimize API
       const results = await optimizeResume(finalResumeText, jdText);
+      console.log('Optimization results:', results);
       
       // Store results in context
       setResults(results);
@@ -57,10 +78,27 @@ export default function Home() {
       // Navigate to loading page, then results
       navigate('/loading');
     } catch (err) {
-      const errorMsg = err?.response?.data?.detail || err?.message || 'Failed to optimize resume. Please try again.';
+      console.error('Optimization error:', err);
+      
+      // Extract error message properly
+      let errorMsg = 'Failed to optimize resume. Please try again.';
+      
+      if (err?.response?.data?.detail) {
+        errorMsg = err.response.data.detail;
+      } else if (err?.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err?.message && typeof err.message === 'string') {
+        errorMsg = err.message;
+      } else if (err?.response?.status === 0 || err?.code === 'ECONNABORTED') {
+        errorMsg = 'Connection timeout. Is the backend server running?';
+      } else if (err?.response?.status >= 500) {
+        errorMsg = 'Server error. Please try again in a moment.';
+      }
+      
       setOptError(errorMsg);
       setOptLoading(false);
       alert(`Error: ${errorMsg}`);
+      console.log('Full error object:', err);
     } finally {
       setOptimizing(false);
     }

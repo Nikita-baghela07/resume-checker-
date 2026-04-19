@@ -10,6 +10,27 @@ export const api = axios.create({
   timeout: 60000,
 })
 
+// Response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error Details:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      code: error.code,
+      url: error.config?.url,
+    });
+    
+    // Ensure error has proper message
+    if (error.response?.data?.detail && !error.message) {
+      error.message = error.response.data.detail;
+    }
+    
+    return Promise.reject(error);
+  }
+)
+
 // ─── Upload ───────────────────────────────────────────────────────────────────
 
 /**
