@@ -254,24 +254,29 @@ def rewrite_resume(resume_text: str, job_description: str, model, target_keyword
         
         rewritten_text = str(rewritten_text).strip()
 
-        # --- HYBRID SEMANTIC VALIDATION ---
-        # Only accept the change if it's semantically valid (similarity > 0.4) 
-        # to prevent complete hallucinations, AND if it's better or different.
+        # --- LENIENT VALIDATION (KEYWORD-FOCUSED) ---
+        # Accept rewrites if they're different from original.
+        # We PRIORITIZE KEYWORD COVERAGE over semantic similarity.
+        # Keyword-rich rewrites might be longer and less similar to the original, 
+        # but that's OK—we want better ATS scores, not semantic perfection!
         is_changed = rewritten_text.lower() != original_bullet.strip().lower()
         
+        # OPTIONAL: Only reject if the rewrite is SEVERELY hallucinated
+        # (i.e., completely loses connection to the original topic)
         if is_changed and model and jd_embedding is not None:
-            # Optional: Ensure rewrite didn't lose the original meaning entirely
-            # overlap = compute_similarity(original_bullet, rewritten_text, model)
-            
-            # Ensure rewrite is semantically helpful for the JD
             old_sim = compute_similarity(original_bullet, job_description, model, emb_b=jd_embedding)
             new_sim = compute_similarity(rewritten_text, job_description, model, emb_b=jd_embedding)
             
-            # If the new version is worse semantically, discard it!
-            if new_sim < old_sim - 5.0: # Allow slight variations for keyword stuffing
-                logger.warning(f"⚠ Discarding low-quality rewrite for bullet {i} (semantic score dropped)")
+            # ONLY reject if SEVERELY worse (> 15 point drop), not minor drops
+            # This allows keyword-focused rewrites to pass through
+            if new_sim < old_sim - 15.0: 
+                logger.warning(f"⚠ Discarding severely hallucinated rewrite for bullet {i} (semantic score dropped {old_sim - new_sim:.1f} points)")
                 rewritten_text = original_bullet
                 is_changed = False
+            elif new_sim >= old_sim:
+                logger.info(f"✓ Semantic improvement for bullet {i}: {old_sim:.1f} → {new_sim:.1f}")
+            else:
+                logger.info(f"✓ Keyword-focused rewrite for bullet {i} (slight semantic drop {old_sim - new_sim:.1f}pt, but better keywords)")
 
         # Replace in full text if the bullet actually changed
         if is_changed:
