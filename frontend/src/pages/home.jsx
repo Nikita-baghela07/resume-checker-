@@ -122,22 +122,32 @@ export default function Home({ onOptimize, error }) {
               AI Engine Ready
             </div>
             
-            {user && (
-              <div className="flex items-center gap-3 pl-6 border-l border-white/10">
-                <div className="flex flex-col items-end gap-1.5">
-                  <span className="text-sm font-semibold text-white">{user.full_name || user.email}</span>
-                  <button 
-                    onClick={logout}
-                    className="px-3 py-1.5 text-xs font-bold text-white bg-brand-500/20 hover:bg-brand-500/40 border border-brand-400/30 hover:border-brand-400 rounded-lg uppercase tracking-wider transition-all duration-200"
-                  >
-                    Logout
-                  </button>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-xs text-brand-400 font-bold">
-                  {(user.full_name || user.email).charAt(0).toUpperCase()}
-                </div>
-              </div>
-            )}
+            {/* Always show user menu in navbar */}
+            <div className="flex items-center gap-3 pl-6 border-l border-white/10">
+              {user ? (
+                <>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="text-sm font-semibold text-white">{user.full_name || user.email}</span>
+                    <button 
+                      onClick={logout}
+                      className="px-3 py-1.5 text-xs font-bold text-white bg-brand-500/20 hover:bg-brand-500/40 border border-brand-400/30 hover:border-brand-400 rounded-lg uppercase tracking-wider transition-all duration-200"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-xs text-brand-400 font-bold">
+                    {(user.full_name || user.email).charAt(0).toUpperCase()}
+                  </div>
+                </>
+              ) : (
+                <button 
+                  onClick={() => window.location.href = '/auth'}
+                  className="px-3 py-1.5 text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 border border-brand-400 rounded-lg uppercase tracking-wider transition-all duration-200"
+                >
+                  Login
+                </button>
+              )}
+            </div>
           </div>
         </nav>
 

@@ -67,7 +67,7 @@ export default function Result({ results, onReset, resumeText }) {
               </button>
             </div>
 
-            {user && (
+            {user ? (
               <div className="flex items-center gap-3 pl-6 border-l border-white/10">
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-xs font-semibold text-white">{user.full_name || user.email}</span>
@@ -79,6 +79,13 @@ export default function Result({ results, onReset, resumeText }) {
                   </button>
                 </div>
               </div>
+            ) : (
+              <button 
+                onClick={() => window.location.href = '/auth'}
+                className="px-3 py-1 text-[10px] font-bold text-white bg-brand-500 hover:bg-brand-600 border border-brand-400 rounded-lg uppercase tracking-wider transition-all duration-200"
+              >
+                Login
+              </button>
             )}
           </div>
         </nav>
