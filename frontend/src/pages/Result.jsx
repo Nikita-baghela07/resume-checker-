@@ -40,7 +40,7 @@ export default function Result({ results, onReset, resumeText }) {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* ── Nav ────────────────────────────────────────────────────────── */}
-        <nav className="flex items-center justify-between px-6 py-4 border-b border-white/5 sticky top-0 bg-[#0a0e1a]/80 backdrop-blur-md z-20">
+        <nav className="flex items-center justify-between px-6 py-4 border-b border-white/5 sticky top-0 bg-gradient-to-r from-slate-900/50 to-slate-800/50 backdrop-blur-md z-20">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 bg-gradient-to-br from-brand-500 to-purple-500 rounded-lg flex items-center justify-center text-sm">
               ⚡
@@ -67,26 +67,29 @@ export default function Result({ results, onReset, resumeText }) {
               </button>
             </div>
 
-            {user ? (
-              <div className="flex items-center gap-3 pl-6 border-l border-white/10">
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs font-semibold text-white">{user.full_name || user.email}</span>
-                  <button 
-                    onClick={logout}
-                    className="px-3 py-1 text-[10px] font-bold text-white bg-brand-500/20 hover:bg-brand-500/40 border border-brand-400/30 hover:border-brand-400 rounded-lg uppercase tracking-wider transition-all duration-200"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button 
-                onClick={() => window.location.href = '/auth'}
-                className="px-3 py-1 text-[10px] font-bold text-white bg-brand-500 hover:bg-brand-600 border border-brand-400 rounded-lg uppercase tracking-wider transition-all duration-200"
-              >
-                Login
-              </button>
-            )}
+            {/* Auth section - ALWAYS VISIBLE */}
+            <div className="flex items-center gap-4 pl-6 border-l-2 border-brand-500/50">
+              {user ? (
+                <>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs font-bold text-white">{user.full_name || user.email}</span>
+                    <button 
+                      onClick={logout}
+                      className="mt-1 px-3 py-1 text-[10px] font-bold text-white bg-brand-500 hover:bg-brand-600 rounded-lg uppercase tracking-wider transition-all duration-200"
+                    >
+                      📤 Logout
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <button 
+                  onClick={() => window.location.href = '/auth'}
+                  className="px-3 py-1 text-[10px] font-bold text-white bg-brand-500 hover:bg-brand-600 rounded-lg uppercase tracking-wider transition-all duration-200"
+                >
+                  🔓 Login
+                </button>
+              )}
+            </div>
           </div>
         </nav>
 
