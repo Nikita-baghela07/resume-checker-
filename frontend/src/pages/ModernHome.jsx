@@ -16,7 +16,7 @@ export default function Home() {
   const [uploadedResumeText, setUploadedResumeText] = useState('');
 
   const checkReady = () => {
-    const hasResume = mode === 'upload' ? hasFile : resumeText.trim().length >= 300;
+    const hasResume = mode === 'upload' ? hasFile : resumeText.trim().length >= 100;
     const hasJD = jdText.trim().length >= 50;
     return hasResume && hasJD;
   };
@@ -54,8 +54,8 @@ export default function Home() {
         }
       }
 
-      if (!finalResumeText || finalResumeText.length < 300) {
-        throw new Error(`Resume must be at least 300 characters (currently ${finalResumeText.length} characters)`);
+      if (!finalResumeText || finalResumeText.length < 100) {
+        throw new Error(`Resume must be at least 100 characters (currently ${finalResumeText.length} characters)`);
       }
       
       if (!jdText || jdText.length < 50) {
@@ -221,8 +221,8 @@ export default function Home() {
                     style={{ minHeight: '120px' }}
                   />
                   <div className="jd-count">
-                    <span>{resumeText.length}</span> / 300 characters minimum
-                    {resumeText.length < 300 && <span style={{ color: '#EF4444', marginLeft: '8px' }}>({300 - resumeText.length} more needed)</span>}
+                    <span>{resumeText.length}</span> / 100 characters minimum
+                    {resumeText.length < 100 && <span style={{ color: '#EF4444', marginLeft: '8px' }}>({100 - resumeText.length} more needed)</span>}
                   </div>
                 </>
               )}
@@ -257,8 +257,8 @@ export default function Home() {
             </button>
             <div className="btn-hint">
               {!checkReady() ? (
-                resumeText.length < 300 && mode === 'paste' 
-                  ? `Resume too short: ${300 - resumeText.length} more characters needed`
+                resumeText.length < 100 && mode === 'paste' 
+                  ? `Resume too short: ${100 - resumeText.length} more characters needed`
                   : 'Upload your resume (PDF) and paste a job description to continue'
               ) : 'No data stored · ATS-safe output guaranteed'}
             </div>

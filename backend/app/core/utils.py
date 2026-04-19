@@ -129,7 +129,7 @@ def validate_resume_quality(text: str) -> None:
     Validate if the provided text looks like a professional resume.
     
     Checks:
-    1. Minimum character length (300 chars)
+    1. Minimum character length (100 chars)
     2. Presence of at least 2 standard resume section headers
     
     Raises:
@@ -138,10 +138,10 @@ def validate_resume_quality(text: str) -> None:
     cleaned = text.strip()
     
     # 1. Length check
-    if len(cleaned) < 300:
+    if len(cleaned) < 100:
         raise ValueError(
             f"The provided content is too short ({len(cleaned)} characters). "
-            "A standard resume should be at least 300 characters long."
+            "A resume should be at least 100 characters long."
         )
     
     # 2. Section check

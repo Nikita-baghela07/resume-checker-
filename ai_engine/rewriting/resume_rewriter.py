@@ -91,48 +91,53 @@ def _extract_json_from_response(text: str) -> list:
 def _replace_bullet_in_text(full_text: str, original_bullet: str, rewritten_bullet: str) -> tuple[str, bool]:
     """
     Find the line in full_text that contains original_bullet and replace the WHOLE line.
-    This is much more robust than partial string replacement.
+    Uses a multi-stage approach for maximum robustness.
     """
     original_clean = original_bullet.strip()
     if not original_clean:
         return full_text, False
 
-    # 1. Exact or near-exact match for the content (ignoring leading bullet chars)
-    # Escape for regex but be careful with whitespace
-    escaped = re.escape(original_clean)
+    # Stage 1: Exact or near-exact match for the content (ignoring leading bullet chars)
+    # Escape for regex but handle internal whitespace flexibly
+    words = original_clean.split()
+    if not words:
+        return full_text, False
+        
+    # Build a regex that allows any horizontal whitespace between words
+    flexible_content = r'\s+'.join(re.escape(w) for w in words)
     
-    # Pattern to find a line that HAS this bullet text, regardless of prefix
-    # Matches: [Optional Prefix] [Original Bullet] [Optional Trailing Whitespace]
-    line_pattern = re.compile(rf'(?m)^.*{escaped}.*$', re.IGNORECASE)
+    # Pattern to find a line that HAS this bullet text
+    # Matches: [Search line start] ... [Content] ... [Search line end]
+    line_pattern = re.compile(rf'(?m)^.*{flexible_content}.*$', re.IGNORECASE)
     
     match = line_pattern.search(full_text)
     if match:
         line_start, line_end = match.span()
-        # We want to preserve the prefix if possible, OR let the LLM provide a new one.
-        # Most professional resumes use the same bullet char consistently.
-        # Let's try to see if there's a prefix on this specific line.
         current_line = match.group(0)
         prefix_match = _BULLET_PATTERN.match(current_line)
         
+        # Try to preserve the original indent and bullet symbol
         if prefix_match:
             indent, bullet_char, _ = prefix_match.groups()
             new_line = f"{indent}{bullet_char}{rewritten_bullet}"
         else:
-            # Fallback: if no prefix detected, just use the rewritten text
             new_line = rewritten_bullet
 
         new_text = full_text[:line_start] + new_line + full_text[line_end:]
         return new_text, True
 
-    # 2. Fuzzy fallback: if exact line match fails, try matching first 20 chars
-    if len(original_clean) > 20:
-        short_escaped = re.escape(original_clean[:20])
-        fuzzy_pattern = re.compile(rf'(?m)^.*{short_escaped}.*$', re.IGNORECASE)
-        match = fuzzy_pattern.search(full_text)
-        if match:
-            line_start, line_end = match.span()
-            new_text = full_text[:line_start] + rewritten_bullet + full_text[line_end:]
-            return new_text, True
+    # Stage 2: Fuzzy fallback (first 30 characters)
+    # Sometimes OCR or PDF extraction Mangels the end of lines
+    if len(original_clean) > 30:
+        head_words = original_clean[:30].split()
+        if head_words:
+            fuzzy_head = r'\s+'.join(re.escape(w) for w in head_words)
+            fuzzy_pattern = re.compile(rf'(?m)^.*{fuzzy_head}.*$', re.IGNORECASE)
+            match = fuzzy_pattern.search(full_text)
+            if match:
+                line_start, line_end = match.span()
+                new_text = full_text[:line_start] + rewritten_bullet + full_text[line_end:]
+                return new_text, True
 
     return full_text, False
 
