@@ -79,12 +79,38 @@ logger.info(f"Configuring CORS with allowed origins: {settings.ALLOWED_ORIGINS}"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 logger.info("✅ CORS middleware configured")
+
+
+# Additional middleware to ensure CORS headers are always present
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    """Ensure CORS headers are always present in responses."""
+    origin = request.headers.get("origin")
+    
+    # Check if origin is in allowed list
+    is_allowed = False
+    if origin:
+        # Direct match
+        if origin in settings.ALLOWED_ORIGINS:
+            is_allowed = True
+        # Regex match for Vercel
+        elif origin.endswith(".vercel.app"):
+            is_allowed = True
+    
+    response = await call_next(request)
+    
+    if is_allowed and origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    
+    return response
 
 
 # ─── Global Error Handler ─────────────────────────────────────────────────────
