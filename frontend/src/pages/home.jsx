@@ -123,12 +123,12 @@ export default function Home({ onOptimize, error }) {
             </div>
             
             {user && (
-              <div className="flex items-center gap-4 pl-6 border-l border-white/10">
-                <div className="flex flex-col items-end">
-                  <span className="text-xs font-semibold text-white">{user.full_name || user.email}</span>
+              <div className="flex items-center gap-3 pl-6 border-l border-white/10">
+                <div className="flex flex-col items-end gap-1.5">
+                  <span className="text-sm font-semibold text-white">{user.full_name || user.email}</span>
                   <button 
                     onClick={logout}
-                    className="p-1 -mr-1 text-[10px] text-slate-500 hover:text-brand-400 uppercase tracking-widest font-bold transition-colors"
+                    className="px-3 py-1.5 text-xs font-bold text-white bg-brand-500/20 hover:bg-brand-500/40 border border-brand-400/30 hover:border-brand-400 rounded-lg uppercase tracking-wider transition-all duration-200"
                   >
                     Logout
                   </button>
