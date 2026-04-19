@@ -1,62 +1,40 @@
 import { useState } from 'react'
-import Home   from './pages/home.jsx'
-import Result from './pages/Result.jsx'
-import Loader from './components/Loader.jsx'
-import AuthPage from './pages/AuthPage.jsx'
-import { optimizeResume } from './services/api.js'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import ModernHome from './pages/ModernHome.jsx'
+import ModernLoadingPage from './pages/ModernLoadingPage.jsx'
+import ModernResultsPage from './pages/ModernResultsPage.jsx'
+import ModernAuthPage from './pages/ModernAuthPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
-
-/**
- * Global app state:
- *   step:         'upload' | 'loading' | 'results'
- *   resumeText:   string  (extracted or pasted)
- *   jobDesc:      string
- *   results:      OptimizeResponse | null
- *   error:        string | null
- */
+import { OptimizationProvider } from './context/OptimizationContext.jsx'
 
 export default function App() {
-  const { user } = useAuth()
-  const [step,       setStep]       = useState('upload')
-  const [resumeText, setResumeText] = useState('')
-  const [jobDesc,    setJobDesc]    = useState('')
-  const [results,    setResults]    = useState(null)
-  const [error,      setError]      = useState(null)
+  const { user, loading: authLoading } = useAuth()
 
-  const handleOptimize = async (text, jd) => {
-    setResumeText(text)
-    setJobDesc(jd)
-    setError(null)
-    setStep('loading')
-
-    try {
-      const data = await optimizeResume(text, jd)
-      setResults(data)
-      setStep('results')
-    } catch (err) {
-      const msg = err?.response?.data?.detail || 'Something went wrong. Please try again.'
-      setError(msg)
-      setStep('upload')
-    }
-  }
-
-  const handleReset = () => {
-    setStep('upload')
-    setResults(null)
-    setError(null)
-    setResumeText('')
-    setJobDesc('')
-  }
-
-  if (!user) {
-    return <AuthPage />
+  if (authLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        background: 'var(--bg)'
+      }}>
+        <div style={{ fontSize: '18px', color: 'var(--text2)' }}>Loading...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a]">
-      {step === 'upload'  && <Home   onOptimize={handleOptimize} error={error} />}
-      {step === 'loading' && <Loader />}
-      {step === 'results' && <Result results={results} onReset={handleReset} resumeText={resumeText} />}
-    </div>
+    <OptimizationProvider>
+      <Router>
+        <Routes>
+          <Route path="/auth" element={<ModernAuthPage />} />
+          <Route path="/" element={<ModernHome />} />
+          <Route path="/loading" element={<ModernLoadingPage />} />
+          <Route path="/results" element={<ModernResultsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </OptimizationProvider>
   )
 }
