@@ -17,9 +17,14 @@ export default function App() {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        background: 'var(--bg)'
+        background: 'linear-gradient(135deg, #1f4788 0%, #2d1b3d 100%)',
+        color: '#ffffff'
       }}>
-        <div style={{ fontSize: '18px', color: 'var(--text2)' }}>Loading...</div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚡</div>
+          <div style={{ fontSize: '18px', fontWeight: '500', marginBottom: '8px' }}>OptiResume AI</div>
+          <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>Loading your session...</div>
+        </div>
       </div>
     )
   }

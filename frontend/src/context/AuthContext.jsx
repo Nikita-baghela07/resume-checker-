@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
       const authHeader = `Bearer ${token}`;
       api.defaults.headers.common['Authorization'] = authHeader;
     } catch (error) {
-      console.error('Session expired');
+      console.error('Session expired or invalid token');
       logout();
     } finally {
       setLoading(false);
@@ -36,15 +36,20 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await api.post('/api/v1/auth/login', { email, password });
-    const { access_token } = response.data;
+    const { access_token, user: userData } = response.data;
     localStorage.setItem('token', access_token);
     const authHeader = `Bearer ${access_token}`;
     api.defaults.headers.common['Authorization'] = authHeader;
-    await validateToken(access_token);
+    setUser(userData);
   };
 
   const register = async (email, password, fullName) => {
-    await api.post('/api/v1/auth/register', { email, password, full_name: fullName });
+    const response = await api.post('/api/v1/auth/register', { email, password, full_name: fullName });
+    const { access_token, user: userData } = response.data;
+    localStorage.setItem('token', access_token);
+    const authHeader = `Bearer ${access_token}`;
+    api.defaults.headers.common['Authorization'] = authHeader;
+    setUser(userData);
   };
 
   const logout = () => {
@@ -57,7 +62,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, login, logout, register, loading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

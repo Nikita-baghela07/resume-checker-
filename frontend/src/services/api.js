@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-// Use environment variable with fallback
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://optiresume-ai-backend-payw.onrender.com'
+// Use environment variable with fallback to local backend for development
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 console.log('🔌 API Base URL:', BASE_URL)
 
