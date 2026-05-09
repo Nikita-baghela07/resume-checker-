@@ -98,9 +98,9 @@ export default function ModernResultsPage() {
   );
 
   // Categorize skill gaps
-  const highSkills = skill_gaps.filter(s => s.priority === 'high');
-  const mediumSkills = skill_gaps.filter(s => s.priority === 'medium');
-  const lowSkills = skill_gaps.filter(s => s.priority === 'low');
+  const highSkills = skill_gaps.filter(s => s.priority.toLowerCase() === 'high');
+  const mediumSkills = skill_gaps.filter(s => s.priority.toLowerCase() === 'medium');
+  const lowSkills = skill_gaps.filter(s => s.priority.toLowerCase() === 'low');
 
   return (
     <>
@@ -258,18 +258,21 @@ export default function ModernResultsPage() {
                   </div>
                 </div>
                 <div className="sg-tags">
-                  {skill_gaps.map((gap, idx) => (
-                    <div key={idx} className={`sg-tag ${gap.priority}`} style={{
-                      background: gap.priority === 'high' ? 'var(--redbg)' : gap.priority === 'medium' ? 'var(--amberbg)' : 'var(--greenbg)',
-                      color: gap.priority === 'high' ? 'var(--red)' : gap.priority === 'medium' ? 'var(--amber)' : 'var(--green)',
-                      border: gap.priority === 'high' ? '1px solid #FECACA' : gap.priority === 'medium' ? '1px solid #FDE68A' : '1px solid #BBF7D0'
-                    }}>
-                      <span className="sg-tag-dot" style={{
-                        background: gap.priority === 'high' ? 'var(--red)' : gap.priority === 'medium' ? 'var(--amber)' : 'var(--green)'
-                      }}></span>
-                      {gap.skill}
-                    </div>
-                  ))}
+                  {skill_gaps.map((gap, idx) => {
+                    const priority = gap.priority.toLowerCase();
+                    return (
+                      <div key={idx} className={`sg-tag ${priority}`} style={{
+                        background: priority === 'high' ? 'var(--redbg)' : priority === 'medium' ? 'var(--amberbg)' : 'var(--greenbg)',
+                        color: priority === 'high' ? 'var(--red)' : priority === 'medium' ? 'var(--amber)' : 'var(--green)',
+                        border: priority === 'high' ? '1px solid #FECACA' : priority === 'medium' ? '1px solid #FDE68A' : '1px solid #BBF7D0'
+                      }}>
+                        <span className="sg-tag-dot" style={{
+                          background: priority === 'high' ? 'var(--red)' : priority === 'medium' ? 'var(--amber)' : 'var(--green)'
+                        }}></span>
+                        {gap.skill}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
