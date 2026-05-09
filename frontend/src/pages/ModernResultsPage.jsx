@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { downloadPDF } from '../services/api.js';
 import { useOptimization } from '../context/OptimizationContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import '../styles/modern.css';
 
 export default function ModernResultsPage() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { optimizationData } = useOptimization();
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedDiff, setExpandedDiff] = useState(0);
@@ -109,7 +111,16 @@ export default function ModernResultsPage() {
           <a href="/" className="logo">
             <div className="logo-mark">OR</div>
             <span className="logo-text">Opti<span style={{ color: 'var(--accent)' }}>Resume</span></span>
-          </a>
+          <div className="nav-links">
+            {user ? (
+              <div className="user-profile-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span className="nav-user-name" style={{ fontSize: '14px', color: 'var(--text2)' }}>Hi, {user.full_name?.split(' ')[0] || 'User'}</span>
+                <button className="nav-link" onClick={logout}>Logout</button>
+              </div>
+            ) : (
+              <button className="nav-link" onClick={() => navigate('/auth')}>Login</button>
+            )}
+          </div>
         </div>
       </nav>
 

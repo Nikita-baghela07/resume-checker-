@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { uploadResume, optimizeResume } from '../services/api.js';
 import { useOptimization } from '../context/OptimizationContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import '../styles/modern.css';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { setResults, setLoading: setOptLoading, setError: setOptError } = useOptimization();
   const [mode, setMode] = useState('upload');
   const [hasFile, setHasFile] = useState(false);
@@ -130,9 +132,17 @@ export default function Home() {
             <span className="logo-text">Opti<span style={{ color: 'var(--accent)' }}>Resume</span></span>
           </a>
           <div className="nav-links">
-            <button className="nav-link">How it works</button>
-            <button className="nav-link">Features</button>
-            <button className="nav-link">Pricing</button>
+            <button className="nav-link" onClick={() => document.getElementById('features-section')?.scrollIntoView({ behavior: 'smooth' })}>Features</button>
+            
+            {user ? (
+              <div className="user-profile-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span className="nav-user-name" onClick={() => navigate('/profile')} style={{ cursor: 'pointer', color: 'var(--accent)', fontWeight: '600' }}>Hi, {user.full_name?.split(' ')[0] || 'User'}</span>
+                <button className="nav-link" onClick={logout}>Logout</button>
+              </div>
+            ) : (
+              <button className="nav-link" onClick={() => navigate('/auth')}>Login</button>
+            )}
+
             <button className="nav-cta" onClick={() => document.getElementById('upload-section').scrollIntoView({ behavior: 'smooth' })}>
               Optimize Resume →
             </button>

@@ -4,6 +4,7 @@ import ModernHome from './pages/ModernHome.jsx'
 import ModernLoadingPage from './pages/ModernLoadingPage.jsx'
 import ModernResultsPage from './pages/ModernResultsPage.jsx'
 import ModernAuthPage from './pages/ModernAuthPage.jsx'
+import ModernProfilePage from './pages/ModernProfilePage.jsx'
 import ChatWidget from './components/ChatWidget.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { OptimizationProvider } from './context/OptimizationContext.jsx'
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/" element={<ModernHome />} />
           <Route path="/loading" element={<ModernLoadingPage />} />
           <Route path="/results" element={<ModernResultsPage />} />
+          <Route path="/profile" element={<ModernProfilePage />} />
           
           {/* Redirect unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
