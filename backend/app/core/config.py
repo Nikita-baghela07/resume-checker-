@@ -14,7 +14,7 @@ class Settings:
     MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "2000"))
     ALLOWED_ORIGINS: list = [
         origin.strip() for origin in 
-        os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177,http://localhost:3000").split(",")
+        os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177,http://localhost:3000,https://resume-checker-h4mi.vercel.app").split(",")
     ]
     
     # Deployment Mode: Set to 'false' in production to save 300+ MB RAM
