@@ -4,11 +4,15 @@ import ModernHome from './pages/ModernHome.jsx'
 import ModernLoadingPage from './pages/ModernLoadingPage.jsx'
 import ModernResultsPage from './pages/ModernResultsPage.jsx'
 import ModernAuthPage from './pages/ModernAuthPage.jsx'
+import ChatWidget from './components/ChatWidget.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { OptimizationProvider } from './context/OptimizationContext.jsx'
 
 export default function App() {
   const { user, loading: authLoading } = useAuth()
+
+  // Allow guest access - test mode doesn't require login
+  const isAuthenticated = user !== null
 
   if (authLoading) {
     return (
@@ -36,23 +40,15 @@ export default function App() {
           {/* Public routes */}
           <Route path="/auth" element={<ModernAuthPage />} />
           
-          {/* Protected routes - require authentication */}
-          <Route 
-            path="/" 
-            element={user ? <ModernHome /> : <Navigate to="/auth" replace />} 
-          />
-          <Route 
-            path="/loading" 
-            element={user ? <ModernLoadingPage /> : <Navigate to="/auth" replace />} 
-          />
-          <Route 
-            path="/results" 
-            element={user ? <ModernResultsPage /> : <Navigate to="/auth" replace />} 
-          />
+          {/* Routes that work with or without authentication (guest mode allowed) */}
+          <Route path="/" element={<ModernHome />} />
+          <Route path="/loading" element={<ModernLoadingPage />} />
+          <Route path="/results" element={<ModernResultsPage />} />
           
-          {/* Redirect unknown routes to home or auth */}
-          <Route path="*" element={<Navigate to={user ? "/" : "/auth"} replace />} />
+          {/* Redirect unknown routes to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <ChatWidget />
       </Router>
     </OptimizationProvider>
   )

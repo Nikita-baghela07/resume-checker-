@@ -95,3 +95,21 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ─── Chat Models ──────────────────────────────────────────────────────────────
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    history: Optional[list[ChatMessage]] = []
+    resume_context: Optional[str] = None
+    jd_context: Optional[str] = None
+    optimization_results: Optional[dict] = None
+
+class ChatResponse(BaseModel):
+    status: str = "success"
+    response: str

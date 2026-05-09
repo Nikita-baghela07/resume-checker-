@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 import jwt
-from typing import Any
+from typing import Any, Dict
 
 from app.db.session import get_db, engine, Base
 from app.models.user import User as UserModel
@@ -33,7 +33,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         raise credentials_exception
     return user
 
-@router.post("/auth/register", response_model=UserResponse)
+@router.post("/auth/register")
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     # Check if user exists
     user = db.query(UserModel).filter(UserModel.email == user_in.email).first()
@@ -52,9 +52,25 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return new_user
+    
+    # Create token
+    access_token_expires = timedelta(minutes=1440)
+    access_token = create_access_token(
+        subject=new_user.id, expires_delta=access_token_expires
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": new_user.id,
+            "email": new_user.email,
+            "full_name": new_user.full_name,
+            "is_active": new_user.is_active
+        }
+    }
 
-@router.post("/auth/login", response_model=Token)
+@router.post("/auth/login")
 def login(user_in: UserLogin, db: Session = Depends(get_db)):
     # Authenticate user
     user = db.query(UserModel).filter(UserModel.email == user_in.email).first()
@@ -69,7 +85,16 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(
         subject=user.id, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "is_active": user.is_active
+        }
+    }
 
 @router.get("/auth/me", response_model=UserResponse)
 def get_me(current_user: UserModel = Depends(get_current_user)):

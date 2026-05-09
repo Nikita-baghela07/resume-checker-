@@ -112,6 +112,27 @@ export const downloadPDF = async (optimizedResume, candidateName = 'Candidate') 
   window.URL.revokeObjectURL(url)
 }
 
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Chat with the AI career coach.
+ * @param {string} message         - User's message
+ * @param {Array}  history         - Chat history [{role, content}]
+ * @param {string} resumeContext   - Optional resume text
+ * @param {string} jdContext       - Optional job description
+ * @param {object} optimizationResults - Current results data
+ */
+export const chatWithAI = async (message, history = [], resumeContext = null, jdContext = null, optimizationResults = null) => {
+  const res = await api.post('/api/v1/chat', {
+    message,
+    history,
+    resume_context: resumeContext,
+    jd_context: jdContext,
+    optimization_results: optimizationResults
+  })
+  return res.data
+}
+
 // ─── Health ───────────────────────────────────────────────────────────────────
 
 export const checkHealth = async () => {

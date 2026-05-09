@@ -18,7 +18,7 @@ BOLD = '\033[1m'
 
 # Server URLs
 BACKEND_URL = "http://localhost:8000"
-FRONTEND_URL = "http://localhost:5175"
+FRONTEND_URL = "http://localhost:5173"
 
 class SystemMonitor:
     def __init__(self):
