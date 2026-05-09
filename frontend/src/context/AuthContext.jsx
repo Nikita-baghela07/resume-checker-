@@ -35,8 +35,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
+    console.log('Logging in with:', email);
     const response = await api.post('/api/v1/auth/login', { email, password });
     const { access_token, user: userData } = response.data;
+    console.log('Login success, user data:', userData);
     localStorage.setItem('token', access_token);
     const authHeader = `Bearer ${access_token}`;
     api.defaults.headers.common['Authorization'] = authHeader;
@@ -44,8 +46,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (email, password, fullName) => {
+    console.log('Registering user:', email);
     const response = await api.post('/api/v1/auth/register', { email, password, full_name: fullName });
     const { access_token, user: userData } = response.data;
+    console.log('Registration success, user data:', userData);
     localStorage.setItem('token', access_token);
     const authHeader = `Bearer ${access_token}`;
     api.defaults.headers.common['Authorization'] = authHeader;
@@ -53,6 +57,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('Logging out user:', user?.email);
     localStorage.removeItem('token');
     if (api.defaults.headers.common['Authorization']) {
       delete api.defaults.headers.common['Authorization'];

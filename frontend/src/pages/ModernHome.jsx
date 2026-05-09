@@ -136,7 +136,7 @@ export default function Home() {
             
             {user ? (
               <div className="user-profile-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span className="nav-user-name" onClick={() => navigate('/profile')} style={{ cursor: 'pointer', color: 'var(--accent)', fontWeight: '600' }}>Hi, {user.full_name?.split(' ')[0] || 'User'}</span>
+                <span className="nav-user-name" onClick={() => navigate('/profile')} style={{ cursor: 'pointer', color: 'var(--accent)', fontWeight: '600' }}>Hi, {user.full_name || user.email?.split('@')[0]}</span>
                 <button className="nav-link" onClick={logout}>Logout</button>
               </div>
             ) : (
